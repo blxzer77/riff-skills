@@ -1,0 +1,7 @@
+{
+  "name": "api-server",
+  "private": true,
+  "type": "module",
+  "scripts": { "dev": "node src/server.js", "test": "node --test" },
+  "dependencies": { "express": "^4.21.0", "express-session": "^1.18.0", "pg": "^8.13.0" }
+}

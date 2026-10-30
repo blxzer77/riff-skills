@@ -1,0 +1,26 @@
+{
+  "skill_name": "designing-apis",
+  "evals": [
+    {
+      "id": 1,
+      "name": "design-retryable-export",
+      "prompt": "Add an API for starting customer exports. Exports can take minutes, users retry when mobile connections drop, and we need progress plus a downloadable result. Inspect the existing API conventions and tests, then propose or implement the safest contract.",
+      "expected_output": "Inspects repository conventions; chooses a durable operation/status resource; specifies idempotency, states, result retrieval, authorization, expiry, errors, and tests; avoids pretending the request is synchronous.",
+      "assertions": ["The response includes a decision brief or implementation plan grounded in existing files", "The contract defines idempotency and a long-running operation lifecycle", "The response includes validation for retries, authorization, failure, and old-client compatibility"]
+    },
+    {
+      "id": 2,
+      "name": "evolve-search-list",
+      "prompt": "Our existing /items endpoint needs filtering by owner, sorting by updated time, and pagination. Some clients are several releases behind. Design the change without breaking them.",
+      "expected_output": "Keeps the existing contract compatible where possible; defines stable ordering, bounded filters, opaque cursor behavior, limits, and a migration/deprecation plan; checks schemas and tests.",
+      "assertions": ["Pagination and ordering semantics are explicit", "The answer addresses old clients and distinguishes additive from breaking changes", "The answer does not impose a new API style without inspecting the existing endpoint"]
+    },
+    {
+      "id": 3,
+      "name": "ai-stream-and-webhook",
+      "prompt": "We are adding an AI job that streams tokens to a web client and sends a completion notification to another system. Decide whether to use SSE, polling, or webhooks and define the contracts.",
+      "expected_output": "Uses SSE for suitable one-way live updates and a webhook for cross-system notification, with reconnect/resumption, event IDs, deduplication, signing/authentication, retries, and reconciliation; calls out assumptions.",
+      "assertions": ["The choice is justified by client and delivery needs rather than ideology", "SSE resumption and webhook at-least-once handling are specified", "The answer includes failure and security-sensitive contract details without leaking secrets"]
+    }
+  ]
+}

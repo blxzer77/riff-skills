@@ -1,0 +1,41 @@
+{
+  "skill_name": "reviewing-code",
+  "evals": [
+    {
+      "id": 1,
+      "name": "auth-regression",
+      "prompt": "Review the supplied diff for a change to request authorization and caching. Do not edit files or post comments. Report only validated findings with file:line, impact, evidence, fix, severity, and confidence; include tests run and an explicit no-findings result if appropriate.",
+      "expected_output": "A scoped, evidence-based review that traces authorization and cache behavior, reports only change-introduced actionable defects at confidence at least 80%, and does not modify files.",
+      "assertions": [
+        "Establishes the changed-file and base scope before conclusions.",
+        "Traces authorization and cache behavior and identifies only change-introduced actionable defects.",
+        "Reports each finding with file:line, impact, evidence, fix, severity, and confidence of at least 80%.",
+        "Does not modify files or claim checks were run without evidence."
+      ]
+    },
+    {
+      "id": 2,
+      "name": "migration-tests",
+      "prompt": "Review this database migration and its tests before merge. Focus on behavioral coverage and data-integrity risk, especially rollback, partial failure, old clients, and boundary data. Do not implement fixes.",
+      "expected_output": "A test review weighted toward data-integrity criticality, with concrete findings only where the diff creates reachable risk.",
+      "assertions": [
+        "Evaluates test coverage by the criticality of data integrity and migration behavior.",
+        "Checks rollback, partial failure, compatibility, and boundary behavior rather than line coverage alone.",
+        "Suppresses pre-existing or speculative concerns and validates findings against the diff.",
+        "Provides concise evidence-based output and states review limitations."
+      ]
+    },
+    {
+      "id": 3,
+      "name": "security-false-positive",
+      "prompt": "Review a patch that parses user input and calls an external service. Check security and reliability, but distinguish reachable vulnerabilities from trusted-boundary controls and test-only fixtures. Do not make changes.",
+      "expected_output": "A security-aware review that names attacker capability, entry point, asset, violated control, exploit path, and impact, while suppressing theoretical or unreachable concerns.",
+      "assertions": [
+        "Identifies actor, entry point, asset, trust boundary, violated control, and plausible impact for any security finding.",
+        "Avoids reporting a dangerous-looking API or theoretical attack without a reachable exploit path.",
+        "Covers timeouts, retries, error handling, sensitive logging, and resource limits where changed.",
+        "Uses the explicit no-findings format when no candidate reaches the confidence threshold."
+      ]
+    }
+  ]
+}

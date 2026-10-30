@@ -1,0 +1,92 @@
+[
+  {
+    "query": "run the evals for skills/writing-tests with pi and tell me if it beats no skill",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "does my api-design skill actually make a difference? I want numbers, not vibes",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "I changed the description of writing-adrs, did that make triggering better or worse?",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "the deploy skill fires on every random devops question. figure out why and tighten it",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "review skills/reviewing-code/SKILL.md against best practices before I publish it, don't change anything yet",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "compare v1 and v2 of the testing skill on the same prompts and tell me which one is better",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "set up eval cases for the new selecting-technologies skill, we have none",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "our benchmark shows 100% pass with and without the skill. what does that mean and what should I change",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "is this skill worth the extra tokens? the benchmark.json is in .workspace/writing-tests/iteration-2",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "write a new skill for managing feature flags",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "set up pytest for this repo and add a coverage report to CI",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "our LLM summarizer's eval scores dropped after the model upgrade, help me debug the prompt",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "build an eval harness for our RAG chatbot answers with an LLM judge",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "shorten skills/writing-adrs/SKILL.md, it's too long",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "benchmark our API endpoints' latency before and after the caching change",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "review this pull request for bugs",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "install the evaluating-skills skill globally for all my agents",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "explain what an Agent Skill is and how agents decide to load one",
+    "should_trigger": false,
+    "set": "train"
+  }
+]

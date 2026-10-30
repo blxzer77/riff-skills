@@ -1,0 +1,13 @@
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
+.idea/
+.vscode/
+
+# Eval workspaces (contain skill snapshots; keep out of git and skill discovery)
+.workspace/
+
+# Agent runtime state
+.claude/*.lock
+.claude/settings.local.json

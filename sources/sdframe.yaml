@@ -1,0 +1,363 @@
+# Curation map: SDFrame (Caldis/frameworks) -> riff-skills
+#
+# Every upstream framework slug appears exactly once: either as source
+# material for a skill, or under `cut` with a reason. Upstream text is
+# source material only; content is rewritten and checked against primary
+# sources before it ships. Skills absent from `skills` have no upstream input.
+
+upstream:
+  repo: https://github.com/Caldis/frameworks
+  commit: e519d0dd4d16be63b956fd35ab52fd6644840328
+  data: data/frameworks/*.json
+
+skills:
+  selecting-technologies:
+    - decision-matrix
+    - trade-off-sliders
+    - qaw
+    - polyglot-persistence
+
+  designing-modules:
+    - layered-architecture
+    - n-tier-layered
+    - hexagonal-architecture
+    - ports-and-adapters
+    - onion-architecture
+    - clean-architecture
+    - vertical-slice-architecture
+    - modular-monolith
+    - microservices-decomposition
+    - monolith-decomposition-patterns
+    - microkernel-architecture
+    - eda
+    - publish-subscribe-pattern
+    - deep-vs-shallow-modules
+    - leaky-abstractions
+    - complexity-budget
+    - separation-of-concerns
+    - dependency-injection
+    - functional-core-imperative-shell
+    - yagni-principle
+    - kiss-principle
+    - domain-driven-design
+    - conways-law
+    - architecture-fitness-functions
+    - architectural-fitness-functions
+    - fitness-function-driven-development
+    - evolutionary-architecture
+    - strangler-fig-pattern
+    - strangler-fig-at-code-level
+    - strangler-fig-code-level
+    - branch-by-abstraction
+    - parallel-run
+    - mikado-method
+
+  designing-apis:
+    - rest-maturity-model
+    - richardson-maturity-model
+    - openapi-specification
+    - api-first-design
+    - graphql-schema-design
+    - grpc-protocol-buffers
+    - webhook-pattern
+    - event-driven-api-design
+    - api-versioning-strategies
+    - api-deprecation-lifecycle
+    - semantic-versioning
+    - deprecation-strategy
+    - expansion-contraction-pattern
+    - database-migration-patterns
+    - evolutionary-database-design
+    - api-pagination-patterns
+    - api-error-handling-standards
+    - api-rate-limiting-throttling
+    - idempotency-pattern
+    - retry-pattern
+    - api-security-patterns
+    - oauth2-openid-connect
+    - bff-pattern
+    - api-gateway-pattern
+    - data-transfer-object
+
+  writing-adrs:
+    - adr
+    - adr-y-statements
+    - decision-log-practice
+
+  writing-tests:
+    - test-pyramid
+    - testing-trophy
+    - tdd
+    - property-based-testing
+    - fuzz-testing
+    - mutation-testing
+    - contract-testing
+    - pact-contract-testing
+    - consumer-driven-contracts
+    - snapshot-testing
+
+  reviewing-code:
+    - owasp-top-10
+    - error-handling-patterns
+    - secrets-management
+    - principle-of-least-privilege
+    - conventional-comments
+
+  reviewing-designs:
+    - atam
+    - threat-modeling-stride
+    - rfc-process
+    - c4-model
+
+  building-llm-applications:
+    - rag-architecture
+    - prompt-engineering-patterns
+    - prompt-chaining
+    - tool-use-design-pattern
+    - tool-use-react-pattern
+    - react-framework
+    - ai-first-api-design
+    - model-context-protocol-mcp
+    - agentic-workflow-patterns
+    - multi-agent-orchestration-pattern
+    - agent-communication-protocol
+    - context-window-management
+    - guardrails-framework
+    - ai-safety-layers
+    - ai-red-teaming
+    - human-in-the-loop
+    - llm-evaluation-framework
+    - evaluation-driven-development
+    - prompt-testing
+    - ai-output-verification
+    - llmops
+    - ai-observability-framework
+    - agent-reliability-patterns
+    - ai-gateway-pattern
+    - llm-system-design-patterns
+    - ai-cost-optimization
+    - semantic-caching
+    - prompt-caching-strategies
+
+cut:
+  # Agents already apply these well; restating them changes no behavior.
+  model-already-knows:
+    - design-thinking-ideo
+    - systems-thinking
+    - jobs-to-be-done
+    - first-principles-thinking
+    - cynefin-framework
+    - wardley-mapping
+    - problem-framing-how-now-wow
+    - six-thinking-hats
+    - analogical-thinking
+    - bounded-rationality-in-design
+    - worse-is-better
+    - occams-razor-in-design
+    - theory-of-constraints
+    - solid-principles
+    - grasp-patterns
+    - gof-design-patterns
+    - clean-code-principles
+    - dry-principle
+    - composition-over-inheritance
+    - law-of-demeter
+    - strategy-pattern
+    - observer-pattern
+    - factory-method-pattern
+    - abstract-factory-pattern
+    - decorator-pattern
+    - adapter-pattern
+    - singleton-pattern
+    - command-pattern
+    - template-method-pattern
+    - state-pattern
+    - builder-pattern
+    - flyweight-pattern
+    - null-object-pattern
+    - repository-pattern
+    - unit-of-work-pattern
+    - data-mapper-pattern
+    - active-record-pattern
+    - specification-pattern
+    - middleware-pipeline-pattern
+    - pipe-and-filter
+    - immutability-pattern
+    - type-driven-design
+    - design-by-contract
+    - mvc
+    - mvvm
+    - mvp
+    - flux-unidirectional
+    - reactive-extensions
+    - security-by-design
+    - security-development-lifecycle
+    - defense-in-depth
+    - continuous-testing
+    - bdd
+
+  # Domains outside the personal-project scope (no SRE, data platform,
+  # or distributed-infrastructure work).
+  out-of-scope-domain:
+    - cap-theorem
+    - eventual-consistency
+    - crdt
+    - crdts
+    - consensus-protocols
+    - raft-consensus
+    - leader-election
+    - gossip-protocol
+    - gossip-epidemic-protocol
+    - saga-pattern
+    - two-phase-commit
+    - outbox-pattern
+    - backpressure-pattern
+    - sharding-strategies
+    - consistent-hashing
+    - circuit-breaker-pattern
+    - circuit-breaker-with-retry
+    - bulkhead-pattern
+    - bulkhead-service-level
+    - service-discovery
+    - service-discovery-pattern
+    - sidecar-pattern
+    - sidecar-container-pattern
+    - actor-model
+    - lambda-architecture
+    - kappa-architecture
+    - medallion-architecture
+    - data-lakehouse
+    - stream-processing-patterns
+    - change-data-capture
+    - star-schema
+    - slowly-changing-dimensions
+    - data-vault-2
+    - data-contract
+    - schema-registry
+    - schema-registry-pattern
+    - data-quality-framework
+    - data-lineage
+    - data-lineage-governance
+    - data-catalog
+    - data-mesh
+    - feature-store
+    - feature-store-pattern
+    - mlops
+    - opentelemetry
+    - distributed-tracing
+    - structured-logging
+    - log-aggregation-patterns
+    - four-golden-signals
+    - red-method
+    - use-method
+    - observability-driven-development
+    - observability-as-code
+    - anomaly-detection-patterns
+    - continuous-profiling
+    - synthetic-monitoring
+    - sli-slo-sla
+    - slo-as-practice
+    - service-level-indicators
+    - error-budget-policy
+    - incident-management-framework
+    - incident-response-playbook
+    - blameless-postmortems
+    - on-call-rotation-design
+    - on-call-engineering
+    - runbook-automation
+    - chaos-engineering
+    - chaos-engineering-practices
+    - chaos-observability
+    - blue-green-deployment
+    - canary-deployment
+    - progressive-delivery
+    - canary-analysis
+    - feature-flags
+    - feature-toggles-at-code-level
+    - feature-flag-observability
+    - feature-branch-strategy
+    - infrastructure-as-code
+    - iac-maturity-model
+    - immutable-infrastructure
+    - gitops
+    - feature-environments
+    - twelve-factor-app
+    - dora-metrics
+    - engineering-metrics-dashboard
+    - zero-trust-architecture
+    - identity-federation
+    - waf-patterns
+    - supply-chain-security-slsa
+    - devsecops-pipeline
+    - privacy-by-design
+    - load-testing-patterns
+    - accessibility-testing-wcag
+    - visual-regression-testing
+
+  # Beyond the scale of the target projects; worth naming only as
+  # over-engineering signals inside designing-modules / designing-apis.
+  beyond-target-scale:
+    - cqrs-pattern
+    - event-sourcing-pattern
+    - ddd-tactical-patterns
+    - cell-based-architecture
+    - deployment-stamps-pattern
+    - space-based-architecture
+    - service-mesh-pattern
+    - service-mesh-observability
+    - graphql-federation
+    - api-composition-pattern
+    - hateoas
+    - asyncapi
+    - edge-computing-api-patterns
+    - togaf-adm
+
+  # People, career, and org-governance processes.
+  organizational:
+    - spotify-model
+    - amazon-two-pizza-teams
+    - inner-source
+    - platform-engineering
+    - platform-as-a-product
+    - engineering-ladder
+    - architecture-review-board
+    - architecture-guild
+    - guilds-communities-of-practice
+    - developer-experience-framework
+    - engineering-effectiveness
+    - developer-onboarding-framework
+    - technical-mentorship-program
+    - engineering-principles-framework
+    - mob-ensemble-programming
+    - security-champions-program
+    - calms-framework
+    - three-ways-devops
+    - nist-cybersecurity-framework
+    - architectural-kata
+    - inverse-conway-maneuver
+    - team-topologies
+    - technical-debt-quadrant
+    - technical-debt-management-framework
+    - continuous-architecture
+    - documentation-as-code
+    - living-documentation
+    - technical-writing-as-a-practice
+
+  # Niche, product-specific, thin, or speculative upstream content.
+  niche-or-speculative:
+    - confidential-computing
+    - runtime-application-self-protection
+    - data-loss-prevention
+    - penetration-testing-framework
+    - developer-portal-backstage
+    - cost-observability-finops
+    - ai-pair-programming
+    - self-healing-systems
+    - evolutionary-agent-systems
+    - ai-assisted-refactoring
+    - multimodal-pipeline-design
+    - retrieval-augmented-fine-tuning-raft
+    - responsible-ai-design
+    - agent-oriented-design-thinking
+    - human-ai-interaction-design
+    - agent-deployment-patterns

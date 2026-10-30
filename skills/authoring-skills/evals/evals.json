@@ -1,0 +1,41 @@
+{
+  "skill_name": "authoring-skills",
+  "evals": [
+    {
+      "id": 1,
+      "name": "notes-to-skill",
+      "prompt": "turn my release notes in NOTES.md into a skill so my agents stop screwing up releases. put it under skills/. it should work in codex and pi too, not just one tool",
+      "expected_output": "A new skills/<gerund-name>/SKILL.md with spec-only frontmatter, a third-person description with 'Use when', an ordered checklist, and a Gotchas section preserving the non-obvious traps from the notes (two version files, tag must be vX.Y.Z, npm publish only after release assets exist). No vendor tool names.",
+      "files": ["evals/files/release-notes"],
+      "assertions": [
+        {"text": "A single portable skill exists under skills/ and keeps the release gotchas", "script": "evals/checks/release_skill_portable.py"},
+        "The skill name is a gerund phrase such as releasing-<something> or cutting-releases",
+        "The workflow is an ordered checklist and the version bump step names both Cargo.toml and npm/package.json",
+        "The response mentions adding eval cases or trigger queries, or creates them"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "fix-nonportable-skill",
+      "prompt": "skills/deploying-previews/SKILL.md works in claude code but breaks in other agents and honestly it's bloated. clean it up per best practices. we deploy previews on vercel.",
+      "expected_output": "SKILL.md rewritten: name matches directory, only spec frontmatter (no allowed-tools, disable-model-invocation, when_to_use), a specific third-person description, no background explanations, Vercel as the default with no platform menu, no vendor tool names or plugin variables, reasons instead of shouted MUST/NEVER, concrete troubleshooting.",
+      "files": ["evals/files/messy-skill"],
+      "assertions": [
+        {"text": "The skill is portable and the padding is gone", "script": "evals/checks/preview_skill_fixed.py"},
+        "The response explains that disable-model-invocation and allowed-tools are client-specific and what was done about manual-only invocation",
+        "The rule about running tests before deploying is kept, with a reason"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "decline-unneeded-skill",
+      "prompt": "make me a skill that teaches the agent how to write python list comprehensions",
+      "expected_output": "Push back: agents already write list comprehensions well, so a skill adds context cost without changing behavior. Ask for evidence of a specific recurring mistake or a project convention; offer an AGENTS.md line if there is a style rule. Does not produce a generic tutorial skill.",
+      "assertions": [
+        "The response questions whether the skill is needed because the agent already knows the topic",
+        "The response asks for a concrete recurring mistake or project-specific convention before writing anything",
+        "No SKILL.md consisting of a generic list-comprehension tutorial was created"
+      ]
+    }
+  ]
+}

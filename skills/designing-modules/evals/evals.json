@@ -1,0 +1,38 @@
+{
+  "skill_name": "designing-modules",
+  "evals": [
+    {
+      "id": 1,
+      "name": "choose-modularity-for-growing-monolith",
+      "prompt": "Our 80k-line app has one team and one deployment, but checkout changes regularly break reporting. Inspect the repository before proposing how to reorganize it. Should we split into services? Give a practical design and migration plan.",
+      "expected_output": "The response asks for or inspects repository evidence, chooses a modular monolith unless operational constraints justify services, proposes vertical slices with owned data and dependency direction, and includes boundary checks and stop signals.",
+      "assertions": [
+        "It does not recommend microservices solely because the codebase is large",
+        "It names a concrete pressure and an incremental migration path",
+        "It includes at least one boundary or fitness check and an explicit stop signal"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "validate-service-extraction",
+      "prompt": "We want to extract billing from a monolith. Billing and orders currently share six tables and callers reach into billing internals. Design the module boundary and safest extraction sequence.",
+      "expected_output": "The response identifies shared data and internal coupling as blockers, defines ownership and a narrow contract, recommends branch by abstraction or a strangler path with rollout and rollback, and avoids simultaneous writes without reconciliation.",
+      "assertions": [
+        "It treats shared tables as an ownership problem rather than simply adding an API",
+        "It specifies contract, rollout, rollback, and deletion criteria",
+        "It proposes boundary validation for forbidden internals or data access"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "stop-premature-splitting",
+      "prompt": "A small two-person product team asks for 14 microservices so each feature has its own module. The product has one release cadence and no independent scaling needs. Respond with a recommendation and what to do instead.",
+      "expected_output": "The response recommends a single module or modular monolith with explicit vertical seams, explains the operational cost of services, and gives criteria for revisiting the decision.",
+      "assertions": [
+        "It rejects service-per-feature as premature without operational or ownership evidence",
+        "It proposes a proportionate lower rung and vertical slices",
+        "It states concrete conditions that would justify later extraction"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+[
+  {"query":"design an API for a job that takes minutes and can be retried","should_trigger":true,"set":"train"},
+  {"query":"add cursor pagination and filters without breaking old clients","should_trigger":true,"set":"train"},
+  {"query":"should this endpoint be REST, RPC, or GraphQL for our clients?","should_trigger":true,"set":"train"},
+  {"query":"define a consistent error contract for these API endpoints","should_trigger":true,"set":"train"},
+  {"query":"we need idempotent retries for a payment-like command","should_trigger":true,"set":"train"},
+  {"query":"choose between SSE, polling, and webhooks for live AI updates","should_trigger":true,"set":"train"},
+  {"query":"review this API change for compatibility and deprecation risk","should_trigger":true,"set":"validation"},
+  {"query":"inspect our OpenAPI and tests before adding an endpoint","should_trigger":true,"set":"validation"},
+  {"query":"turn this domain action into a maintainable API contract","should_trigger":true,"set":"validation"},
+  {"query":"design an API that is easy to evolve as clients multiply","should_trigger":true,"set":"train"},
+  {"query":"explain HTTP status codes to me","should_trigger":false,"set":"train"},
+  {"query":"build a generic HTTP client library","should_trigger":false,"set":"train"},
+  {"query":"choose a cloud load balancer for our service","should_trigger":false,"set":"validation"},
+  {"query":"write a database migration for the users table","should_trigger":false,"set":"train"},
+  {"query":"make a frontend component that renders a list","should_trigger":false,"set":"train"},
+  {"query":"set up a message broker cluster","should_trigger":false,"set":"validation"},
+  {"query":"write a marketing page for our developer platform","should_trigger":false,"set":"train"},
+  {"query":"teach me basic web development","should_trigger":false,"set":"validation"},
+  {"query":"benchmark two JSON parsers","should_trigger":false,"set":"train"},
+  {"query":"install an API documentation tool","should_trigger":false,"set":"validation"}
+]

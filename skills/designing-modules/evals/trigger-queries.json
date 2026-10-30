@@ -1,0 +1,102 @@
+[
+  {
+    "query": "help me split this codebase into maintainable modules",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "should this monolith become microservices? inspect the repo first",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "design boundaries for our growing application without overengineering",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "extract billing from the monolith safely",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "organize this feature as a vertical slice",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "our modules keep importing each other's internals; propose a fix",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "add architecture fitness checks for module boundaries",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "plan a strangler migration for this subsystem",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "use branch by abstraction to replace this implementation",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "when should we move from a modular monolith to services?",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "teach me the Gang of Four design patterns",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "pick a database for my new app",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "write a generic SOLID principles tutorial",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "debug this null pointer exception",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "make a logo for our product",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "write unit tests for this function",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "compare cloud providers for hosting",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "create an API endpoint for invoices",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "explain what dependency injection means",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "review this pull request for style issues",
+    "should_trigger": false,
+    "set": "train"
+  }
+]

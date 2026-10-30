@@ -1,0 +1,52 @@
+{
+  "skill_name": "writing-tests",
+  "evals": [
+    {
+      "id": 1,
+      "name": "bug-fix-needs-regression-test",
+      "prompt": "customer support says people who use SAVE10 together with FREESHIP still get charged $4.99 shipping on small orders. can you fix it? code's in shop/pricing.py",
+      "expected_output": "A failing test reproducing the reported case (percent + free-shipping coupons on an order under $50) added to tests/test_pricing.py first and seen to fail, then the fix in pricing.py, with the full suite passing. The response states the test failed before the fix.",
+      "files": ["evals/files/shop"],
+      "assertions": [
+        {"text": "The pricing bug is fixed without changing other behavior", "script": "evals/checks/bug_fixed.py"},
+        {"text": "The new tests fail on the original code and pass on the fixed code", "script": "evals/checks/regression_test_catches_bug.py"},
+        "The tool calls show the new test being run and failing before pricing.py was edited"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "feature-without-test-request",
+      "prompt": "Add 'eom' payment terms to invoices/due.py: the invoice is due on the last day of the month it was issued. A client asked for it, should be quick.",
+      "expected_output": "due_date supports 'eom' using the actual last day of the month (calendar-aware, including leap years), and the agent adds tests for it unprompted: a 30-day month, a 31-day month, February in common and leap years, and an invoice issued on the last day. Suite passes.",
+      "files": ["evals/files/invoices"],
+      "assertions": [
+        {"text": "eom is implemented correctly and the agent's new tests catch three plausible wrong implementations", "script": "evals/checks/eom_feature_tested.py"},
+        "The added tests include a February case",
+        "The response tells the user which tests were added and that they were run"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "refactor-untested-code",
+      "prompt": "src/report.js is ancient var-soup. modernize it (const/let, template strings, whatever) — the monthly email must come out exactly the same though, customers notice.",
+      "expected_output": "Characterization tests pinning the current output (billable kinds only, percentages with rounding, overage line, anonymous greeting, no-usage message) written and passing against the original code first, then the refactor with those tests unchanged and green.",
+      "files": ["evals/files/report"],
+      "assertions": [
+        {"text": "Output is unchanged on hidden inputs, tests were added, and they catch at least three of four behavior changes", "script": "evals/checks/refactor_pinned_by_tests.py"},
+        "The tool calls show the new tests passing against the original report.js before it was rewritten"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "flaky-test-fix",
+      "prompt": "test/session.test.js fails like half the time in CI ('expires the session after the ttl'). Can you make it stop flaking? Don't just delete it, expiry matters for security.",
+      "expected_output": "The time dependency made controllable (injected clock or the runner's fake timers), the expiry test rewritten to advance time deterministically on both sides of the TTL boundary, no sleeps, suite green on repeated runs, production expiry semantics unchanged (a session is still valid at exactly ttl ms). Explanation of the root cause.",
+      "files": ["evals/files/sessions"],
+      "assertions": [
+        {"text": "Suite passes 20 consecutive runs, has no real-time waits, and still fails if sessions never expire", "script": "evals/checks/session_tests_deterministic.py"},
+        {"text": "Production expiry semantics are unchanged by the fix", "script": "evals/checks/session_semantics_unchanged.py"},
+        "The response identifies the root cause as the test sleeping exactly the TTL while expiry requires strictly more than the TTL to elapse"
+      ]
+    }
+  ]
+}

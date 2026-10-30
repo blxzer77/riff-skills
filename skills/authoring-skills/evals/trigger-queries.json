@@ -1,0 +1,92 @@
+[
+  {
+    "query": "write a skill for our db migration workflow, the steps are in docs/migrations.md",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "I keep telling the agent the same three things about our API client every session. can we package that up so it just knows?",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "my SKILL.md for the pdf thing is 900 lines and the agent ignores half of it, help me restructure it",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "the code-review skill never triggers unless I name it explicitly — rewrite the description so it fires when people ask for a review",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "Convert this .claude/commands/deploy.md command into a proper skill that also works in Codex",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "create a new skill in this repo for designing database schemas, following the repo conventions",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "we have a bash script that every agent run reinvents in python. how should I bundle it into the skill so they just call it?",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "turn what we just did (the flaky test hunt) into something reusable for next time",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "Split our giant frontend-guidelines skill into references so it loads less up front",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "run the evals for writing-tests against pi and show me the benchmark",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "does the designing-apis skill actually help? compare with and without it",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "install the riff-skills repo skills into my codex setup",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "write an AGENTS.md for this repo describing build and test commands",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "Write a system prompt for our customer support chatbot that handles refunds politely",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "add a new MCP tool to our server that lists open invoices",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "why didn't the agent load my testing skill on that last run? here's the transcript",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "write a CONTRIBUTING guide for people adding plugins to our VS Code extension",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "optimize the trigger rate of the writing-adrs description using the query set",
+    "should_trigger": false,
+    "set": "train"
+  }
+]

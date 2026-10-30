@@ -1,0 +1,26 @@
+{
+  "name": "riff-skills",
+  "description": "Agent Skills for software design, testing, review, and AI application engineering",
+  "owner": {
+    "name": "blxzer77"
+  },
+  "plugins": [
+    {
+      "name": "riff-skills",
+      "description": "Engineering skills: writing tests and ADRs, selecting technologies, designing modules and APIs, reviewing code and designs, building LLM applications, and authoring and evaluating skills",
+      "source": "./",
+      "skills": [
+        "./skills/authoring-skills",
+        "./skills/evaluating-skills",
+        "./skills/selecting-technologies",
+        "./skills/designing-modules",
+        "./skills/designing-apis",
+        "./skills/writing-tests",
+        "./skills/writing-adrs",
+        "./skills/reviewing-code",
+        "./skills/reviewing-designs",
+        "./skills/building-llm-applications"
+      ]
+    }
+  ]
+}

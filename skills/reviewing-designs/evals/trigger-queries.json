@@ -1,0 +1,102 @@
+[
+  {
+    "query": "Review this architecture proposal before we implement it.",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "Does this ADR actually justify the choice, or are we missing important tradeoffs?",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "Sanity-check this RFC for a new service boundary against the current repo.",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "We want to rename a public API field. Review the migration plan.",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "Is this design over-engineered for our two-person project?",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "Review the proposed module split, failure paths, and rollback plan.",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "Read this architecture doc and give a go/no-go recommendation before coding.",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "Check whether this data flow has a clear owner and can evolve safely.",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "Review this technical plan; do not edit code yet.",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "Find gaps in the tests and security assumptions in this design proposal.",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "Review this code diff for bugs.",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "Write an ADR for choosing Postgres.",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "Implement the API change described in this RFC.",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "Summarize this architecture document for me.",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "Fix the failing integration test.",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "Add a new module for billing.",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "What is a microservice?",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "Format the design document headings.",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "Create a diagram of the current system.",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "Explain this error from the deployment logs.",
+    "should_trigger": false,
+    "set": "train"
+  }
+]

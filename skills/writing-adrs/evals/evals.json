@@ -1,0 +1,84 @@
+{
+  "skill_name": "writing-adrs",
+  "evals": [
+    {
+      "id": 1,
+      "name": "implicit-decision-during-change",
+      "prompt": "Our jobs get lost every time the jobs-service restarts because the queue in src/jobs/queue.ts is just an in-memory array. Make the queue durable so jobs survive restarts. Keep it simple, it's one instance on a small VM. Don't implement it yet, I want to agree on the approach first, but put whatever we need in the repo so we remember why we chose it.",
+      "expected_output": "An ADR added as docs/adr/0003-*.md following the existing Nygard-style ADRs, comparing real options (e.g. a Postgres-backed queue using the existing database vs. Redis/BullMQ vs. a hosted queue), choosing one with reasons tied to the single-instance/small-VM/Postgres-already-present context, stating costs, with status proposed. No queue implementation yet.",
+      "files": [
+        "evals/files/jobs-service"
+      ],
+      "assertions": [
+        {
+          "text": "Exactly one new ADR is added as docs/adr/0003-<kebab-title>.md",
+          "script": "evals/checks/new_adr_follows_convention.py"
+        },
+        {
+          "text": "The ADR lists at least two options and at least one negative consequence",
+          "script": "evals/checks/adr_has_options_and_costs.py"
+        },
+        "The ADR's status is proposed (or equivalent), not accepted, because the user has not agreed yet",
+        "The decision rationale refers to the project's actual context: a single instance, a small VM, and PostgreSQL already in use"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "supersede-existing-decision",
+      "prompt": "we're moving notify-app off polling, the 5s lag annoys people and we now have ~2k users. going with server-sent events from a small node service next to the next.js app. can you write the decision up properly? docs/decisions is where these live",
+      "expected_output": "A new docs/decisions/0002-*.md recording the move to SSE with context (user growth, latency), options (keep polling, SSE, WebSockets, hosted push), consequences including operational costs of long-lived connections; 0001 marked superseded by 0002 with its original decision text intact; index README updated.",
+      "files": [
+        "evals/files/notify-app"
+      ],
+      "assertions": [
+        {
+          "text": "0001 is marked superseded with its decision text intact, 0002 is added, links back, and the index is updated",
+          "script": "evals/checks/supersedes_old_adr.py"
+        },
+        {
+          "text": "The new ADR lists at least two options and at least one negative consequence",
+          "script": "evals/checks/adr_quality_decisions_dir.py"
+        },
+        "The new ADR's status is accepted, because the user has already decided",
+        "The consequences mention an operational cost of long-lived connections (hosting limits, connection counts, or reconnect handling)",
+        "The new ADR follows the field style of 0001 (bullet Status/Date fields, same heading names) rather than a different template"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "trivial-change-no-adr",
+      "prompt": "add a --delimiter option to csv-tool so I can read semicolon separated files, default stays comma",
+      "expected_output": "The --delimiter flag implemented in csvtool/__main__.py with comma default. No ADR or decision document created, since this is a small, easily reversible change.",
+      "files": [
+        "evals/files/csv-tool"
+      ],
+      "assertions": [
+        {
+          "text": "python -m csvtool --delimiter ';' reads a semicolon file correctly",
+          "script": "evals/checks/csv_flag_implemented.py"
+        },
+        {
+          "text": "No ADR or decision record was created",
+          "script": "evals/checks/no_adr_created.py"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "implicit-adr-session-store",
+      "prompt": "users keep getting logged out randomly \u2014 I think it's because we run 2 instances and sessions live in memory. move sessions somewhere shared. we already have postgres",
+      "expected_output": "express-session configured with a shared store (e.g. connect-pg-simple on the existing Postgres, with the session table created), and, without being asked, docs/adr/0002-*.md in the 0001 style recording the decision: context (two instances, in-memory sessions, random logouts), options (Postgres store, Redis, sticky sessions, stateless tokens), the choice and why, and costs (extra DB writes per request, session table cleanup).",
+      "files": [
+        "evals/files/api-server"
+      ],
+      "assertions": [
+        {
+          "text": "A shared session store is configured and a new ADR 0002 records the decision with options and a cost",
+          "script": "evals/checks/implicit_adr_written.py"
+        },
+        "The ADR follows 0001's structure (bullet Status/Date fields and the same three headings)",
+        "The response tells the user that an ADR was added and why"
+      ]
+    }
+  ]
+}

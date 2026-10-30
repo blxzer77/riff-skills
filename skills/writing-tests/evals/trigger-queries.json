@@ -1,0 +1,102 @@
+[
+  {
+    "query": "users with an expired card get a 500 on /checkout instead of the payment-declined page, fix it pls",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "Add pagination to GET /api/orders (cursor-based, default 20 per page) in the express app under server/routes/orders.ts",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "write tests for src/lib/rateLimiter.ts, it has zero coverage and I'm about to refactor it",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "this test keeps failing randomly on CI but passes locally: tests/integration/test_sync.py::test_concurrent_writes. figure out why",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "Refactor the invoice PDF generator in billing/pdf.py to use the new template engine without changing output",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "our test suite mocks literally everything and still misses bugs. can you look at tests/services and make them actually useful",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "The parseDuration helper returns NaN for inputs like '1h30m'. It's in packages/utils/src/time.ts — fix and make sure it can't regress",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "set up a testing approach for this new FastAPI project, nothing exists yet. what should we test at which level?",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "implement the retry-with-backoff wrapper we discussed for the webhook sender in src/webhooks/send.go",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "Is 40% line coverage bad for a CLI tool? our tests are in tests/ — tell me what's missing that actually matters",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "run the test suite and tell me which tests are failing",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "configure GitHub Actions to run pytest on push and cache the pip dependencies",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "upgrade vitest from 1.6 to 2.1 in package.json and update the config file for the breaking changes",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "Load test our API with k6: ramp to 500 rps against staging and report p95 latency",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "what's the difference between jest and vitest? which is faster for a monorepo?",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "Write the user-facing docs page explaining how to test webhooks locally with our CLI's `listen` command",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "fix the eslint errors in src/components, there are like 40 of them, mostly unused imports",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "review this PR diff for bugs and security problems before I merge it",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "Our evals for the summarization prompt are flat at 72% — help me improve the prompt in prompts/summarize.md",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "generate 200 rows of realistic fake customer data as a CSV for the demo environment",
+    "should_trigger": false,
+    "set": "train"
+  }
+]

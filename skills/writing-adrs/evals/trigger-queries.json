@@ -1,0 +1,102 @@
+[
+  {
+    "query": "can you write an ADR for switching our auth from session cookies to JWTs? context is in docs/auth-notes.md",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "We're replacing Prisma with Drizzle in the api package because of cold-start times on Lambda. Do the migration for the users module first.",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "i think we should split the monolith's billing code into its own package so the worker can import it without pulling in express. go ahead and do it",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "Document why we picked SQLite over Postgres for the desktop app — I keep forgetting and someone asked again in an issue",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "we decided to drop GraphQL and go back to REST for the public API. record that decision somewhere sensible in the repo",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "Add OpenAI as a second LLM provider behind our existing Anthropic client so we can fail over, and make the provider choice configurable",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "our old decision record says we use Redux, but we moved to Zustand last month. update the docs to reflect that",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "Before I start: should the new notifications feature use websockets or SSE? Once we agree, leave a record in docs/adr like the others.",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "set up a decision log for this project, we have none and keep re-arguing the same things in PR comments",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "We're going to standardize error handling across all services on RFC 9457 problem details. Write that up and update the express middleware.",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "rename the getUserData function to fetchUserProfile everywhere in src/",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "Write a README for the cli package explaining install, usage, and config flags",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "bump react from 18.2 to 18.3 and fix whatever breaks in the tests",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "Can you summarize the architecture of this repo for a new contributor? Just explain it in chat, no files.",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "write the changelog entry for v2.4.0 from the merged PRs since the last tag",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "review docs/adr/0004-event-bus.md and tell me if the reasoning holds up — don't edit it",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "add a CONTRIBUTING.md with our branch naming and commit message rules",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "Draft an RFC-style design doc for the new search feature: goals, non-goals, API sketch, rollout plan",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "the docker build takes 9 minutes, speed it up with better layer caching",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "explain the difference between an ADR and an RFC, which should a 3-person team use?",
+    "should_trigger": false,
+    "set": "train"
+  }
+]

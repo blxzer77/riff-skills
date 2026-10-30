@@ -1,0 +1,31 @@
+{
+  "metadata": {"skill_name": "commit-messages", "iteration": 1, "agent": "pi", "model": "example/model",
+               "primary": "with_skill", "baseline": "without_skill", "timestamp": "2026-10-28T10:00:00Z"},
+  "evals": [
+    {"name": "feature-commit", "with_skill": {"pass_rate": 1.0, "time_seconds": 21.0, "tokens": 9100, "runs": 3},
+     "without_skill": {"pass_rate": 1.0, "time_seconds": 14.2, "tokens": 5200, "runs": 3}},
+    {"name": "bugfix-commit", "with_skill": {"pass_rate": 1.0, "time_seconds": 19.5, "tokens": 8800, "runs": 3},
+     "without_skill": {"pass_rate": 0.75, "time_seconds": 13.9, "tokens": 5100, "runs": 3}},
+    {"name": "multi-file-refactor", "with_skill": {"pass_rate": 0.75, "time_seconds": 30.1, "tokens": 12400, "runs": 3},
+     "without_skill": {"pass_rate": 0.75, "time_seconds": 22.0, "tokens": 7700, "runs": 3}}
+  ],
+  "run_summary": {
+    "with_skill": {"pass_rate": {"mean": 0.92, "stddev": 0.12}, "time_seconds": {"mean": 23.5, "stddev": 4.6}, "tokens": {"mean": 10100, "stddev": 1600}},
+    "without_skill": {"pass_rate": {"mean": 0.83, "stddev": 0.12}, "time_seconds": {"mean": 16.7, "stddev": 3.8}, "tokens": {"mean": 6000, "stddev": 1200}},
+    "delta": {"pass_rate": 0.09, "time_seconds": 6.8, "tokens": 4100}
+  },
+  "assertion_patterns": {
+    "pass_both": [
+      "feature-commit: The subject line is under 72 characters",
+      "feature-commit: The message is in imperative mood",
+      "feature-commit: The commit was created",
+      "bugfix-commit: The subject line is under 72 characters",
+      "bugfix-commit: The commit was created",
+      "multi-file-refactor: The commit was created",
+      "multi-file-refactor: The subject line is under 72 characters"
+    ],
+    "fail_both": ["multi-file-refactor: The body lists every renamed module"],
+    "primary_only": ["bugfix-commit: The message references the issue number from the branch name"],
+    "baseline_only": []
+  }
+}

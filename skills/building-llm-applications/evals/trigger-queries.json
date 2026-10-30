@@ -1,0 +1,102 @@
+[
+  {
+    "query": "Design a RAG assistant over our private docs with citations and an honest no-answer path.",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "Our agent sometimes calls the refund tool twice. Make the workflow safe and idempotent.",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "Build a model-powered invoice extraction feature with JSON validation and evals.",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "The LLM is expensive and slow; help me bound context, retries, and tool steps.",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "Add human approval before an agent sends a customer a refund.",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "Our retrieval returns stale documents and the assistant still answers confidently.",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "Compare a direct call, a workflow, and a multi-agent design for this AI feature.",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "Create evals for prompt, retrieval, and tool-schema changes.",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "Design a provider-neutral model adapter with a rollback path.",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "The agent receives malicious instructions in retrieved documents. Fix the boundary.",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "Fix this deterministic parser bug.",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "Add a normal REST endpoint for listing invoices.",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "Explain what JSON schema validation is.",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "Write a unit test for this function.",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "Update the README with installation steps.",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "Review this ordinary code diff for a null pointer.",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "Add a database index for the orders table.",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "Run the existing test suite.",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "Implement a deterministic CSV export.",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "Rename this module.",
+    "should_trigger": false,
+    "set": "train"
+  }
+]

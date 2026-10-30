@@ -1,0 +1,22 @@
+[
+  {"query":"Review this pull request for bugs before merge.","should_trigger":true,"set":"train"},
+  {"query":"Can you inspect this patch for regressions?","should_trigger":true,"set":"train"},
+  {"query":"Find security issues in these changed files.","should_trigger":true,"set":"train"},
+  {"query":"Does this diff have adequate behavioral tests?","should_trigger":true,"set":"train"},
+  {"query":"Review the migration for data-integrity problems.","should_trigger":true,"set":"train"},
+  {"query":"Look for silent failures and swallowed errors in the change.","should_trigger":true,"set":"train"},
+  {"query":"Check this pre-merge change for authorization bugs.","should_trigger":true,"set":"train"},
+  {"query":"Please review the proposed code and report actionable findings only.","should_trigger":true,"set":"train"},
+  {"query":"Assess whether this patch breaks compatibility with old clients.","should_trigger":true,"set":"train"},
+  {"query":"Review this diff, but do not modify the repository.","should_trigger":true,"set":"validation"},
+  {"query":"Write a new module that handles retries.","should_trigger":false,"set":"train"},
+  {"query":"Fix the failing unit tests in this repository.","should_trigger":false,"set":"train"},
+  {"query":"Explain what this function does.","should_trigger":false,"set":"train"},
+  {"query":"Design an API for uploading documents.","should_trigger":false,"set":"train"},
+  {"query":"Refactor this class to make it simpler.","should_trigger":false,"set":"train"},
+  {"query":"Write tests for the parser from scratch.","should_trigger":false,"set":"train"},
+  {"query":"Create a release checklist for the team.","should_trigger":false,"set":"validation"},
+  {"query":"Document the architecture of this service.","should_trigger":false,"set":"validation"},
+  {"query":"Choose a database for this application.","should_trigger":false,"set":"validation"},
+  {"query":"Implement the security fix you described.","should_trigger":false,"set":"validation"}
+]

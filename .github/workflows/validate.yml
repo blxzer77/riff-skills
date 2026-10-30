@@ -1,0 +1,45 @@
+name: validate
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install validators
+        run: pip install pyyaml==6.0.3 skills-ref==0.1.1
+
+      - name: Agent Skills spec (skills-ref)
+        run: |
+          python - <<'EOF'
+          import sys
+          from pathlib import Path
+          from skills_ref import validate
+
+          failed = False
+          for skill in sorted(Path("skills").iterdir()):
+              if not skill.is_dir():
+                  continue
+              errors = validate(skill)
+              for e in errors:
+                  print(f"error: {skill}: {e}")
+              failed |= bool(errors)
+          sys.exit(1 if failed else 0)
+          EOF
+
+      - name: Repository conventions
+        run: python scripts/validate.py
+
+      - name: Eval scripts compile
+        run: python -m py_compile skills/*/scripts/*.py scripts/*.py

@@ -1,0 +1,102 @@
+[
+  {
+    "query": "Should we use Postgres or Redis for this new job queue? The app is one small VM.",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "Pick a framework for the next version of this app; inspect what we already use first.",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "This new tool is trending everywhere — should we replace our stable dependency with it?",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "Compare hosting options for this service, including lock-in and how we'd leave later.",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "We need to choose a model provider for an AI feature; cost and exit path matter.",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "Is this database mature enough for a production personal project? Check current evidence.",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "We are adding a new external payment provider. Make the decision and record the tradeoffs.",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "Which queue library is best? Don't inspect the repo, just pick the popular one.",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "Should we adopt this emerging Rust web framework for our small service?",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "Evaluate whether replacing our current ORM is worth the migration cost.",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "Rename this variable across the module.",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "Fix the typo in the README.",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "Run the existing test suite and report failures.",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "Add a missing null check to this function.",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "Explain what dependency injection means.",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "Format these JSON files.",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "Review this code diff for a bug.",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "Write a unit test for this parser.",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "Update the changelog for the latest release.",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "What does this error message mean?",
+    "should_trigger": false,
+    "set": "train"
+  }
+]

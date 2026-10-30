@@ -1,0 +1,45 @@
+{
+  "skill_name": "evaluating-skills",
+  "evals": [
+    {
+      "id": 1,
+      "name": "static-review-flawed-skill",
+      "prompt": "review skills/deploying-previews before I publish it. report only, don't edit anything",
+      "expected_output": "A static review report in the rubric format with severity-rated findings and locations: name/directory mismatch and client-specific frontmatter (critical), vague description, background padding, shouted rules, platform menu, vendor tool names and plugin variable, missing evals. Verdict 'major revision'. No files modified.",
+      "files": ["evals/files/flawed-skill"],
+      "assertions": [
+        "The report flags the name/directory mismatch as critical",
+        "The report flags the client-specific frontmatter fields (allowed-tools, disable-model-invocation, when_to_use)",
+        "The report flags the vague description 'helps with deployments'",
+        "The report flags vendor-specific tool names or the CLAUDE_PLUGIN_ROOT variable in the body",
+        "The verdict is major revision (or equivalent: not publishable)",
+        "No files were modified"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "interpret-flat-benchmark",
+      "prompt": "here's my benchmark for the commit-messages skill (benchmark.json in this folder). with_skill and without_skill are basically identical. is the skill useless?",
+      "expected_output": "Reads benchmark.json; notes that most assertions pass in both configs (non-discriminating) so the benchmark cannot show value; identifies the one assertion that differs; recommends replacing pass_both assertions with harder discriminating ones and adding cases where the baseline fails; notes the skill costs extra tokens; does not conclude 'useless' from this evidence alone.",
+      "files": ["evals/files/flat-benchmark"],
+      "assertions": [
+        "The response explains that assertions passing in both configurations cannot measure the skill's value",
+        "The response names the assertion(s) that do differ between configurations",
+        "The response recommends adding harder or more discriminating assertions or cases rather than concluding the skill is useless",
+        "The response mentions the token or time cost delta"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "write-trigger-queries",
+      "prompt": "write the trigger eval queries for skills/writing-adrs so we can tune its description. put them where the eval scripts expect them",
+      "expected_output": "skills/writing-adrs/evals/trigger-queries.json with ~20 realistic queries, roughly balanced, should-trigger including implicit cases (a change that adds a datastore without mentioning ADRs), should-not-trigger near-misses (README, changelog, design doc, reviewing an ADR), valid JSON per schema.",
+      "files": ["evals/files/adr-skill"],
+      "assertions": [
+        {"text": "trigger-queries.json exists, is valid, has 16-24 queries with at least 7 of each label", "script": "evals/checks/trigger_queries_valid.py"},
+        "At least two should-trigger queries never mention ADRs or decision records explicitly",
+        "Most should-not-trigger queries are near-misses involving documentation or decisions rather than unrelated topics"
+      ]
+    }
+  ]
+}
