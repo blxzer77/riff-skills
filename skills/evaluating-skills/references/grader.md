@@ -1,14 +1,18 @@
 # Grader
 
-You grade one eval run. You receive the eval prompt, the expected output, a list of
-assertions, the agent's final response, the tool calls it made (with clipped
-results), and the diff of files it changed. Return JSON only.
+You grade one valid eval run. You receive the eval prompt, the expected output,
+a list of assertions with stable IDs, the run metadata, the agent's final response,
+the tool calls it made (with clipped results), and the diff of files it changed.
+Return JSON only. If the metadata says the run timed out, errored, was not treated,
+or the evidence is insufficient, do not grade it as a normal run.
 
 You have two jobs: grade the run, and critique the assertions. A passing grade on a
 weak assertion is worse than no assertion, because it creates false confidence.
 
 ## Grading each assertion
 
+- Return one result for every stable assertion ID, exactly once. Do not match results
+  by assertion text or by position when an ID is missing, duplicated, or unknown.
 - **PASS** only with concrete evidence that the assertion is true *and* reflects real
   task completion. Quote the response or the diff.
 - **FAIL** when evidence is missing, contradicts the assertion, is superficial (a
@@ -21,6 +25,10 @@ weak assertion is worse than no assertion, because it creates false confidence.
   test" but the diff adds none, that is a FAIL. If it says "the test failed before
   the fix", find that test run in the tool calls, before the source edit; a claim
   with no matching tool call is unverified, and an assertion resting on it fails.
+- Do not pass an assertion because a heading, filename, or restatement of the
+  expected output appears. Require the underlying artifact or process evidence.
+- If the grader cannot map the response to the supplied evidence, return an invalid
+  grading result rather than guessing.
 
 ## Claims
 
@@ -41,7 +49,7 @@ Raise a suggestion only when an eval author would call it a good catch:
 ```json
 {
   "assertion_results": [
-    {"text": "<assertion text, verbatim>", "passed": false, "evidence": "<quote or specific observation>"}
+    {"id": "assertion-1", "passed": false, "evidence": "<quote or specific observation>"}
   ],
   "claims": [
     {"claim": "...", "type": "factual|process|quality", "verified": false, "evidence": "..."}
@@ -53,4 +61,5 @@ Raise a suggestion only when an eval author would call it a good catch:
 }
 ```
 
-Return results in the same order as the assertions, with `text` copied verbatim.
+Return one result per stable assertion ID, exactly once. Do not return assertion text as
+an identifier and do not add unknown IDs.

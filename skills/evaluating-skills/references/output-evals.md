@@ -2,6 +2,15 @@
 
 Contents: [Write cases](#write-cases) · [Run](#run) · [Assertions](#assertions) · [Grade and aggregate](#grade-and-aggregate) · [Review](#review) · [Iterate](#iterate)
 
+This procedure follows the official Agent Skills guidance on output evals and
+iteration, especially the paired with/without pattern, concrete assertions,
+artifact evidence, pass-both/fail-both analysis, and cost comparison. Primary
+references: [Agent Skills output evaluation](https://agentskills.io/skill-creation/evaluating-skills.md),
+[Anthropic skill authoring best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices),
+and [Claude Code skills](https://code.claude.com/docs/en/skills). Repository-specific
+rules below make invalid runs and treatment status explicit; they are project
+policy, not official statistical guarantees.
+
 Measures whether the skill makes the agent's work better than the same agent
 without it (or than the previous version), and what that costs.
 
@@ -35,6 +44,12 @@ python3 scripts/run_evals.py --skill <skill-dir> --agent <agent> [--model <m>]
   instructions and other skills must not load. Read the Agent adapters reference
   before choosing an adapter or interpreting its logs.
 - Use `--runs 3` once assertions exist; single runs are for the first look.
+- Keep the same prompt, fixture, model, timeout, and permissions for both
+  configurations. Confirmation runs should be paired and low-concurrency; report
+  the concurrency and retry policy.
+- A with-skill run counts as treatment only when its transcript proves the skill was
+  loaded. Untreated runs, timeouts, API errors, and invalid grading are reported
+  separately and excluded from the skill-effect denominator.
 - Evaluate with every agent and model the skill must serve; behavior differs.
 
 Without a supported agent CLI, run each case yourself in a fresh session per
@@ -57,8 +72,11 @@ Write them after reading the first outputs, while the next runs execute.
 - Check every check before trusting it: run it on the untouched fixture (must
   fail), on a hand-written good solution (must pass), and on a near-miss bad one
   (must fail).
-- Process assertions ("ran the test and saw it fail before editing the code") are
-  graded from the tool-call log the grader receives, not from the response's claims.
+- Give every assertion a stable unique `id`; one assertion measures one observable
+  outcome. Process assertions ("ran the test and saw it fail before editing the code")
+  are graded from structured/tool-call evidence, not from the response's claims.
+- Report raw assertion pass counts and rates. A 2/3 result is not the same evidence
+  as 3/3, even when a majority summary labels both as passing.
 - Not everything needs an assertion. Style and judgment go to human review.
 
 ## Grade and aggregate

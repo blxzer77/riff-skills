@@ -6,9 +6,10 @@ license: Apache-2.0
 
 # Evaluating skills
 
-A skill is worth keeping only if an agent with it does measurably better work than
-the same agent without it, and loads it when it should. Evaluate in four layers,
-cheapest first, and stop at the layer that answers the user's question.
+A skill is worth keeping only if the same agent produces measurably better work
+when the skill is actually loaded, and the description routes it to the right tasks.
+Do not treat an installed-but-unloaded run as evidence about the skill body. Evaluate
+in four layers, cheapest first, and stop at the layer that answers the user's question.
 
 | Layer | Answers | Cost | Guide |
 |---|---|---|---|
@@ -32,9 +33,11 @@ two versions need a holistic comparison.
       `references/agents.md` for the supported adapters and isolation caveats.
 - [ ] Ensure `evals/evals.json` exists (≥ 3 cases). Draft missing cases with the user;
       their real tasks make better cases than invented ones.
-- [ ] Layer 3: run, grade, aggregate, review with the user, iterate.
+- [ ] Layer 3: run, grade, aggregate, review with the user, iterate. Exclude
+      timeouts, API errors, invalid grading, and with-skill runs that did not load
+      the skill from the treatment effect; report each count separately.
 - [ ] Layer 2: ensure `evals/trigger-queries.json` exists, measure, optimize if
-      needed.
+      needed. Treat routing and skill-body quality as separate questions.
 - [ ] Report (template below). Leave the workspace for the user; it is not committed.
 
 ## Scripts
@@ -85,9 +88,15 @@ that produced it.
 - Agents skip skills for simple one-step requests. A trigger miss on a trivial query
   says nothing about the description.
 - An assertion that passes in both configurations measures the agent, not the skill.
-  A high with-skill pass rate built on such assertions is meaningless.
+  A high with-skill pass rate built on such assertions is meaningless. Keep the
+  raw per-run rate; majority summaries must not hide 2/3 from 3/3.
+- A with-skill run that never loads the skill is `not_treated`, not a skill failure;
+  measure it as a routing result and exclude it from body-effect comparisons.
+- Timeouts, API errors, missing grading, and invalid grader output are infrastructure
+  failures. Exclude them from quality denominators and report their counts.
 - The grader's verdict rests on artifacts. If the response claims work the diff does
-  not show, that is a failure, not a pass on the strength of the claim.
+  not show, that is a failure, not a pass on the strength of the claim. Assertions
+  need stable IDs; duplicate text must never be used to match verdicts.
 - Compare cost with benefit: a skill that adds 2 points of pass rate for double the
   tokens may be worse than no skill.
 - Results from one agent or model do not transfer. Report which ones were tested.

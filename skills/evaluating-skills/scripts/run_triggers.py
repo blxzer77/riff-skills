@@ -41,7 +41,7 @@ def run_query(query: str, skill_dir: Path, name: str, adapter, model, timeout, r
     triggered = name in result.read_skill
     # A run that errored before the agent decided anything is no evidence either way.
     failed = not triggered and not proc.stopped_early and (
-        proc.exit_code != 0 or result.error is not None)
+        proc.timed_out or proc.exit_code != 0 or result.error is not None)
     return triggered, failed, proc, result.error
 
 
@@ -103,7 +103,8 @@ def main() -> int:
         if args.description_file:
             replace_description(tested / "SKILL.md", description)
 
-        counts = {i: {"triggers": 0, "runs": 0} for i in range(len(queries))}
+        counts = {i: {"triggers": 0, "runs": 0, "stopped_early": 0, "errors": 0}
+                  for i in range(len(queries))}
         infra_errors = 0
         with ThreadPoolExecutor(max_workers=max(1, args.jobs)) as pool:
             futures = {pool.submit(run_query, q["query"], tested, name, adapter, args.model,
@@ -119,12 +120,14 @@ def main() -> int:
                     continue
                 if failed:
                     infra_errors += 1
+                    counts[i]["errors"] += 1
                     detail = agent_error or proc.stderr.strip()[-300:]
                     print(f"error: query {i} exit={proc.exit_code} timed_out={proc.timed_out}: "
                           f"{detail[:300]}", file=sys.stderr)
                     continue
                 counts[i]["runs"] += 1
                 counts[i]["triggers"] += int(triggered)
+                counts[i]["stopped_early"] += int(proc.stopped_early)
 
     if all(c["runs"] == 0 for c in counts.values()):
         die("every run failed; no results written", code=2)
@@ -141,13 +144,17 @@ def main() -> int:
             passed = rate < args.threshold
         results.append({"query": q["query"], "should_trigger": q["should_trigger"],
                         "set": q.get("set"), "triggers": triggers, "runs": runs,
+                        "errors": counts[i]["errors"],
+                        "stopped_early_runs": counts[i]["stopped_early"],
                         "trigger_rate": None if rate is None else round(rate, 2),
                         "passed": passed})
     fn = sum(1 for r in results if r["should_trigger"] and r["passed"] is False)
     fp = sum(1 for r in results if not r["should_trigger"] and r["passed"] is False)
     passed = sum(1 for r in results if r["passed"])
     summary = {"total": len(results), "passed": passed, "failed": fn + fp,
-               "false_negatives": fn, "false_positives": fp}
+               "false_negatives": fn, "false_positives": fp,
+               "infra_errors": infra_errors,
+               "stopped_early_runs": sum(r["stopped_early_runs"] for r in results)}
     errored = sum(1 for r in results if r["passed"] is None)
     if errored:
         summary["errored"] = errored

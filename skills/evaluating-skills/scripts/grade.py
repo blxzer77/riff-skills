@@ -33,7 +33,7 @@ DEFAULT_GRADER = Path(__file__).resolve().parent.parent / "references" / "grader
 def run_script(spec: dict, skill_dir: Path, run_dir: Path, fixture: Path) -> dict:
     script = (skill_dir / spec["script"]).resolve()
     if not script.is_file():
-        return {"text": spec["text"], "passed": False, "method": "script",
+        return {"id": spec["id"], "text": spec["text"], "passed": False, "method": "script",
                 "evidence": f"script not found: {spec['script']}"}
     if os.access(script, os.X_OK):
         argv = [str(script)]
@@ -42,7 +42,7 @@ def run_script(spec: dict, skill_dir: Path, run_dir: Path, fixture: Path) -> dic
     elif script.suffix == ".sh":
         argv = ["bash", str(script)]
     else:
-        return {"text": spec["text"], "passed": False, "method": "script",
+        return {"id": spec["id"], "text": spec["text"], "passed": False, "method": "script",
                 "evidence": f"script is not executable and has no known interpreter: {script.name}"}
     outputs = run_dir / "outputs"
     env = dict(os.environ, EVAL_WORKDIR=str(outputs / "workdir"), EVAL_FIXTURE=str(fixture),
@@ -55,7 +55,8 @@ def run_script(spec: dict, skill_dir: Path, run_dir: Path, fixture: Path) -> dic
         evidence = output[-2000:] or f"exit code {proc.returncode}"
     except subprocess.TimeoutExpired:
         passed, evidence = False, f"script timed out after {SCRIPT_TIMEOUT}s"
-    return {"text": spec["text"], "passed": passed, "evidence": evidence, "method": "script"}
+    return {"id": spec["id"], "text": spec["text"], "passed": passed,
+            "evidence": evidence, "method": "script"}
 
 
 def _close_brackets(text: str) -> str:
@@ -109,7 +110,7 @@ def tool_log(run_adapter, outputs: Path) -> str:
     return run_adapter.tool_log(lines)
 
 
-def grader_prompt(instructions: str, meta: dict, texts: list[str], run_dir: Path,
+def grader_prompt(instructions: str, meta: dict, specs: list[dict], run_dir: Path,
                   run_adapter=None) -> str:
     outputs = run_dir / "outputs"
     response = (outputs / "response.md").read_text(encoding="utf-8", errors="replace") \
@@ -120,30 +121,34 @@ def grader_prompt(instructions: str, meta: dict, texts: list[str], run_dir: Path
     workdir = outputs / "workdir"
     files = sorted(p.relative_to(workdir).as_posix() for p in workdir.rglob("*") if p.is_file()) \
         if workdir.is_dir() else []
-    numbered = "\n".join(f"{i}. {t}" for i, t in enumerate(texts, 1))
+    timing = read_json(run_dir / "timing.json") if (run_dir / "timing.json").is_file() else {}
+    numbered = "\n".join(f"- {s['id']}: {s['text']}" for s in specs)
+    run_meta = json.dumps({k: timing.get(k) for k in (
+        "configuration", "treatment_status", "skill_loaded", "timed_out",
+        "attempts", "error", "skill_load_evidence")}, ensure_ascii=False, indent=2)
     return "\n".join([
         instructions.strip(), "",
+        "# Run metadata (do not infer missing evidence)", "", run_meta, "",
         "# Material to grade", "",
         section("Task prompt given to the agent", meta.get("prompt", "")),
         section("Expected output", meta.get("expected_output", "")),
-        section("Assertions to grade", numbered),
+        section("Assertions to grade (stable IDs)", numbered),
         section("Agent's final response (outputs/response.md)", response),
         section("Tool calls the agent made, in order, with clipped results", actions
                 or "(not available for this agent)"),
         section("Changes the agent made to the working directory (outputs/changes.patch)", patch),
         section("Files in the final working directory", "\n".join(files[:300])),
         "Reply with one JSON object and nothing else, shaped like:",
-        '{"assertion_results": [{"text": "<assertion text verbatim>", "passed": true, '
+        '{"assertion_results": [{"id": "<stable assertion id>", "passed": true, '
         '"evidence": "<quote or concrete reference>"}], "claims": [], '
         '"eval_feedback": {"suggestions": [], "overall": ""}}',
-        "Include every assertion exactly once, in the order given.",
+        "Include every assertion exactly once by id. Do not add unknown ids or use text as the id.",
     ])
 
 
 def grade_llm(adapter, model, instructions, meta, specs, run_dir,
               run_adapter=None) -> tuple[list[dict], dict]:
-    texts = [s["text"] for s in specs]
-    prompt = grader_prompt(instructions, meta, texts, run_dir, run_adapter)
+    prompt = grader_prompt(instructions, meta, specs, run_dir, run_adapter)
     parsed, error, raw = None, "", ""
     for _ in range(GRADER_ATTEMPTS):
         try:
@@ -154,24 +159,28 @@ def grade_llm(adapter, model, instructions, meta, specs, run_dir,
             error, parsed = str(exc), None
         if parsed:
             break
+    expected = {s["id"] for s in specs}
     if not parsed:
-        # Keep the last reply so a grading failure can be told apart from a bad run.
         (run_dir / "grader-raw.txt").write_text(f"{error}\n\n{raw}", encoding="utf-8")
         evidence = f"grader output unparseable after {GRADER_ATTEMPTS} attempts ({error[:300]}); " \
                    "see grader-raw.txt"
-        return [{"text": t, "passed": False, "evidence": evidence, "method": "llm"}
-                for t in texts], {}
-    by_text = {r.get("text"): r for r in parsed["assertion_results"] if isinstance(r, dict)}
-    ordered = [r for r in parsed["assertion_results"] if isinstance(r, dict)]
-    results = []
-    for i, text in enumerate(texts):
-        verdict = by_text.get(text) or (ordered[i] if i < len(ordered) else None)
-        if verdict is None:
-            results.append({"text": text, "passed": False, "method": "llm",
-                            "evidence": "grader returned no verdict for this assertion"})
-            continue
-        results.append({"text": text, "passed": verdict.get("passed") is True,
-                        "evidence": str(verdict.get("evidence", "")), "method": "llm"})
+        return [{"id": s["id"], "text": s["text"], "passed": False,
+                 "evidence": evidence, "method": "llm"} for s in specs], \
+               {"status": "invalid", "grading_error": evidence}
+
+    verdicts = [r for r in parsed["assertion_results"] if isinstance(r, dict)]
+    ids = [r.get("id") for r in verdicts]
+    if len(ids) != len(set(ids)) or set(ids) != expected or any(not isinstance(i, str) for i in ids):
+        evidence = "grader returned duplicate, missing, or unknown assertion IDs"
+        return [{"id": s["id"], "text": s["text"], "passed": False,
+                 "evidence": evidence, "method": "llm"} for s in specs], \
+               {"status": "invalid", "grading_error": evidence}
+
+    by_id = {r["id"]: r for r in verdicts}
+    results = [{"id": s["id"], "text": s["text"],
+                "passed": by_id[s["id"]].get("passed") is True,
+                "evidence": str(by_id[s["id"]].get("evidence", "")), "method": "llm"}
+               for s in specs]
     extras = {k: parsed[k] for k in ("claims", "eval_feedback") if k in parsed}
     return results, extras
 
@@ -195,7 +204,8 @@ def grade_run(run_dir, eval_dir, specs, skill_dir, adapter, model, instructions,
             results[i] = result
     graded = [results[i] for i in sorted(results)]
     passed = sum(1 for r in graded if r["passed"])
-    data = {"assertion_results": graded,
+    data = {"status": extras.pop("status", "valid"),
+            "assertion_results": graded,
             "summary": {"passed": passed, "failed": len(graded) - passed, "total": len(graded),
                         "pass_rate": round(passed / len(graded), 4) if graded else None}}
     data.update(extras)
@@ -240,11 +250,22 @@ def main() -> int:
         meta["assertions"] = specs
         write_json(meta_path, meta)
         for run_dir in sorted(eval_dir.glob("*/run-*")):
-            timing = run_dir / "timing.json"
-            if timing.is_file() and read_json(timing).get("error"):
-                print(f"warning: {run_dir.relative_to(iter_dir)} ended in an agent error; "
+            timing = read_json(run_dir / "timing.json") if (run_dir / "timing.json").is_file() else {}
+            if timing.get("error") or timing.get("timed_out"):
+                reason = timing.get("error") or "timed out"
+                print(f"warning: {run_dir.relative_to(iter_dir)} is invalid ({reason}); "
                       "not graded (re-run it)", file=sys.stderr)
                 (run_dir / "grading.json").unlink(missing_ok=True)
+                continue
+            if timing.get("treatment_status") == "not_treated":
+                write_json(run_dir / "grading.json", {
+                    "status": "not_treated",
+                    "summary": {"passed": None, "failed": None, "total": 0,
+                                "pass_rate": None},
+                    "reason": "with-skill run did not load the skill",
+                })
+                print(f"warning: {run_dir.relative_to(iter_dir)} did not load the skill; "
+                      "excluded from treatment grading", file=sys.stderr)
                 continue
             work.append((run_dir, eval_dir, specs))
     if not work:

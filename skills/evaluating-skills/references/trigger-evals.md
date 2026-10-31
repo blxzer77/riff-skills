@@ -1,5 +1,11 @@
 # Trigger evaluation and description optimization
 
+This procedure follows the official Agent Skills guidance on progressive disclosure,
+realistic positive/near-miss negative queries, three-run trigger rates, and fixed
+train/validation optimization. Primary reference: [Optimizing skill descriptions](https://agentskills.io/skill-creation/optimizing-descriptions.md).
+The routing result is separate from output quality: a trigger run can show whether
+the agent loaded a skill, but cannot by itself prove that the skill improved the task.
+
 Agents see only `name` and `description` until they decide to load a skill, so the
 description alone decides whether the skill is ever used.
 
@@ -27,7 +33,9 @@ documented in this skill's references.
 python3 scripts/run_triggers.py --skill <skill-dir> --agent <agent> --set all --runs 3
 ```
 
-A query's trigger rate is the fraction of runs in which the agent loaded the skill.
+A query's trigger rate is the fraction of completed, non-error runs in which the
+agent loaded the skill. Report errors and early-stopped streaming runs separately;
+trigger results do not establish task completion or full-run cost.
 Use 0.5 as a starting decision threshold for balanced exploratory runs:
 should-trigger queries pass at or above it, and should-not-trigger queries pass
 below it. It is not a universal quality target. Report raw counts, rates, and

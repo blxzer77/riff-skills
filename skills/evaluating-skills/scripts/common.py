@@ -150,13 +150,20 @@ def load_evals(skill_dir: Path) -> list[dict]:
 
 def normalize_assertions(raw) -> list[dict]:
     out = []
-    for item in raw or []:
+    for index, item in enumerate(raw or [], 1):
         if isinstance(item, str):
-            out.append({"text": item})
+            spec = {"text": item}
         elif isinstance(item, dict) and isinstance(item.get("text"), str):
-            out.append(dict(item))
+            spec = dict(item)
         else:
             raise HarnessError(f"invalid assertion: {item!r}")
+        assertion_id = spec.get("id") or f"assertion-{index}"
+        if not isinstance(assertion_id, str) or not assertion_id:
+            raise HarnessError(f"assertion {index}: id must be a non-empty string")
+        if any(existing["id"] == assertion_id for existing in out):
+            raise HarnessError(f"duplicate assertion id: {assertion_id}")
+        spec["id"] = assertion_id
+        out.append(spec)
     return out
 
 

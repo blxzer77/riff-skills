@@ -23,8 +23,9 @@ Both files live in `<skill>/evals/` and are committed with the skill.
       "expected_output": "Human-readable description of success.",
       "files": ["evals/files/cart-service"],
       "assertions": [
-        "The response names the behavior the new test protects",
+        {"id": "names-protected-behavior", "text": "The response names the behavior the new test protects"},
         {
+          "id": "fails-before-fix",
           "text": "The new test fails against the original code",
           "script": "evals/checks/fails_before_fix.py"
         }
@@ -126,23 +127,39 @@ installed where the agent discovers it, excluded from git, and removed before
 ### timing.json
 
 ```json
-{"total_tokens": 84852, "duration_ms": 23332, "agent": "pi", "model": "provider/model", "exit_code": 0}
+{
+  "total_tokens": 84852,
+  "duration_ms": 23332,
+  "agent": "pi",
+  "model": "provider/model",
+  "configuration": "with_skill",
+  "exit_code": 0,
+  "treatment_status": "treated",
+  "skill_loaded": true,
+  "skill_load_evidence": ["writing-tests"],
+  "attempts": [{"number": 1, "error": null, "timed_out": false}]
+}
 ```
 
 `total_tokens` is `null` when the agent does not report usage. Duration is measured
 by the runner around the agent process, never taken from the agent's own report.
-A run killed by `--timeout` adds `"timed_out": true`. A run whose agent ended in an
-error state after all retries adds `"error": "<message>"`; it is not graded and is
-excluded from the benchmark (counted as `errored_runs` per configuration). Token accounting differs per
-agent (some include cache reads), so compare tokens within one agent only.
+A run killed by `--timeout` adds `"timed_out": true` and is invalid for quality
+scoring. A run whose agent ended in an error state after all retries adds `"error":
+"<message>"`; it is invalid and excluded from the benchmark. A with-skill run whose
+transcript does not prove the skill was loaded has `"treatment_status":
+"not_treated"`; it is reported as a routing result and excluded from body-effect
+comparisons. Retry attempt records are retained under `attempts` rather than
+overwriting the original attempt. Token accounting differs per agent (some include
+cache reads), so compare tokens within one agent only.
 
 ### grading.json
 
 ```json
 {
+  "status": "valid",
   "assertion_results": [
-    {"text": "...", "passed": true, "evidence": "Quoted from response.md: ...", "method": "llm"},
-    {"text": "...", "passed": false, "evidence": "pytest: 3 passed", "method": "script"}
+    {"id": "assertion-1", "passed": true, "evidence": "Quoted from response.md: ...", "method": "llm"},
+    {"id": "assertion-2", "passed": false, "evidence": "pytest: 3 passed", "method": "script"}
   ],
   "summary": {"passed": 1, "failed": 1, "total": 2, "pass_rate": 0.5},
   "claims": [{"claim": "...", "type": "factual", "verified": false, "evidence": "..."}],
@@ -180,9 +197,12 @@ agent (some include cache reads), so compare tokens within one agent only.
 }
 ```
 
-`delta` is always primary minus baseline. `assertion_patterns` lists
-`"<eval-name>: <assertion text>"` entries; `pass_both` and `fail_both` are the
-candidates to replace (see the output evaluation guide).
+`delta` is always primary minus baseline and is computed only across evals with
+valid results in both configurations. Each configuration also reports requested,
+completed, untreated, timed-out, errored, missing-grading, and invalid-grading
+counts. `assertion_patterns` lists `"<eval-name>: <assertion text>"` entries;
+`pass_both` and `fail_both` are candidates to replace, while raw per-assertion
+passed/total/rate data remains in each eval (see the output evaluation guide).
 
 ### feedback.json
 
@@ -203,15 +223,19 @@ Empty string means the reviewer had no complaint.
   "runs_per_query": 3, "threshold": 0.5,
   "results": [
     {"query": "...", "should_trigger": true, "set": "train",
-     "triggers": 2, "runs": 3, "trigger_rate": 0.67, "passed": true}
+     "triggers": 2, "runs": 3, "errors": 0, "stopped_early_runs": 2,
+     "trigger_rate": 0.67, "passed": true}
   ],
   "summary": {"total": 12, "passed": 10, "failed": 2,
-              "false_negatives": 1, "false_positives": 1}
+              "false_negatives": 1, "false_positives": 1,
+              "infra_errors": 0, "stopped_early_runs": 20}
 }
 ```
 
 A query passes when `trigger_rate >= threshold` for `should_trigger: true`, and
 `trigger_rate < threshold` for `should_trigger: false`. When every run of a query
 failed (agent error or timeout), `passed` is `null` and the query is counted in
-`summary.errored` instead of as a false result. Files are named
+`summary.errored` instead of as a false result. Streaming adapters may stop after
+detection; `stopped_early_runs` describes those runs and must not be used as full
+task quality or completion-cost evidence. Files are named
 `<UTC %Y%m%dT%H%M%S%fZ>-<set>.json`.

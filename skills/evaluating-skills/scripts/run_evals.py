@@ -58,24 +58,57 @@ def attempt(job, adapter, model, timeout, sandbox_root, outputs):
 
 def run_one(job: dict, adapter, model, timeout, sandbox_root, retries) -> dict:
     run_dir: Path = job["run_dir"]
+    attempts = []
+    proc = result = final_error = None
     for n in range(retries + 1):
         if n:
             time.sleep(RETRY_BACKOFF_SECONDS * n)
-        proc, result = attempt(job, adapter, model, timeout, sandbox_root, run_dir / "outputs")
-        if result.error is None:
+        attempt_dir = run_dir / "attempts" / f"attempt-{n + 1}"
+        proc, result = attempt(job, adapter, model, timeout, sandbox_root,
+                               attempt_dir / "outputs")
+        error = result.error
+        if proc.timed_out:
+            error = f"timed out after {timeout}s"
+        elif proc.exit_code not in (0, None) and error is None:
+            error = f"agent exited with code {proc.exit_code}"
+        attempts.append({"number": n + 1, "error": error, "timed_out": proc.timed_out,
+                         "exit_code": proc.exit_code, "duration_ms": proc.duration_ms,
+                         "total_tokens": result.tokens})
+        if error is None:
+            final_error = None
             break
-        print(f"agent error in {run_dir} (attempt {n + 1}/{retries + 1}): {result.error[:160]}",
+        final_error = error
+        print(f"agent error in {run_dir} (attempt {n + 1}/{retries + 1}): {error[:160]}",
               file=sys.stderr)
+
+    assert proc is not None and result is not None
+    final_outputs = run_dir / "outputs"
+    if final_outputs.exists():
+        shutil.rmtree(final_outputs)
+    source_outputs = run_dir / "attempts" / f"attempt-{len(attempts)}" / "outputs"
+    if source_outputs.is_dir():
+        shutil.copytree(source_outputs, final_outputs)
+
+    expected_skill = skill_name(job["skill"]) if job["skill"] else None
+    loaded = expected_skill in result.read_skill if expected_skill else None
+    treatment_status = (
+        "baseline" if expected_skill is None else
+        "treated" if loaded else "not_treated"
+    )
     timing = {"total_tokens": result.tokens, "duration_ms": proc.duration_ms,
-              "agent": adapter.name, "model": model, "exit_code": proc.exit_code}
+              "agent": adapter.name, "model": model, "configuration": job["config"],
+              "exit_code": proc.exit_code, "attempts": attempts,
+              "skill_loaded": loaded, "skill_load_evidence": sorted(result.read_skill),
+              "treatment_status": treatment_status}
     if proc.timed_out:
         timing["timed_out"] = True
-    if result.error is not None:
-        timing["error"] = result.error
+    if final_error is not None:
+        timing["error"] = final_error
     write_json(run_dir / "timing.json", timing)
     return {"run": run_dir, "exit_code": proc.exit_code, "timed_out": proc.timed_out,
             "seconds": proc.duration_ms / 1000, "tokens": result.tokens,
-            "read_skill": sorted(result.read_skill), "error": result.error}
+            "read_skill": sorted(result.read_skill), "error": final_error,
+            "treatment_status": treatment_status}
 
 
 def main() -> int:
@@ -166,7 +199,8 @@ def main() -> int:
         "skill_name": name, "skill_dir": str(skill_dir),
         "snapshot_dir": str(snapshot) if args.baseline == "old_skill" else None,
         "agent": adapter.name, "model": args.model, "configurations": list(configs),
-        "runs": args.runs, "created": utc_now()})
+        "runs": args.runs, "jobs": args.jobs, "timeout": args.timeout,
+        "retries": args.retries, "created": utc_now()})
 
     failures = 0
     rows = []

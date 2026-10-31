@@ -37,33 +37,60 @@ def spread(values, digits=4):
     return {"mean": round(statistics.fmean(values), digits), "stddev": round(sd, digits)}
 
 
-def collect(config_dir: Path) -> dict | None:
-    rates, times, tokens, verdicts, errored = [], [], [], {}, 0
+def collect(config_dir: Path) -> dict:
+    rates, times, tokens, verdicts, assertion_texts = [], [], [], {}, {}
+    counts = {"requested_runs": 0, "completed_runs": 0, "errored_runs": 0,
+              "timed_out_runs": 0, "untreated_runs": 0, "missing_grading_runs": 0,
+              "invalid_grading_runs": 0, "missing_token_runs": 0}
     runs = sorted(config_dir.glob("run-*"))
+    counts["requested_runs"] = len(runs)
     for run in runs:
-        grading = read_json(run / "grading.json") if (run / "grading.json").is_file() else None
         timing = read_json(run / "timing.json") if (run / "timing.json").is_file() else {}
+        if timing.get("timed_out"):
+            counts["timed_out_runs"] += 1
+            print(f"warning: {run} timed out; excluded", file=sys.stderr)
+            continue
         if timing.get("error"):
-            errored += 1
+            counts["errored_runs"] += 1
             print(f"warning: {run} ended in an agent error; excluded", file=sys.stderr)
             continue
+        if timing.get("treatment_status") == "not_treated":
+            counts["untreated_runs"] += 1
+            print(f"warning: {run} did not load the skill; excluded", file=sys.stderr)
+            continue
+        grading = read_json(run / "grading.json") if (run / "grading.json").is_file() else None
         if grading is None:
+            counts["missing_grading_runs"] += 1
             print(f"warning: {run} has no grading.json; excluded", file=sys.stderr)
             continue
-        rates.append(grading["summary"].get("pass_rate"))
+        if grading.get("status", "valid") != "valid":
+            counts["invalid_grading_runs"] += 1
+            print(f"warning: {run} has invalid grading; excluded", file=sys.stderr)
+            continue
+        summary = grading.get("summary", {})
+        rates.append(summary.get("pass_rate"))
+        counts["completed_runs"] += 1
         if timing.get("duration_ms") is not None:
             times.append(timing["duration_ms"] / 1000)
-        tokens.append(timing.get("total_tokens"))
+        token_count = timing.get("total_tokens")
+        tokens.append(token_count)
+        if token_count is None:
+            counts["missing_token_runs"] += 1
         for result in grading.get("assertion_results", []):
-            verdicts.setdefault(result["text"], []).append(bool(result["passed"]))
-    if not rates:
-        return None
+            key = result.get("id") or result.get("text")
+            verdicts.setdefault(key, []).append(bool(result.get("passed")))
+            assertion_texts[key] = result.get("text", key)
     avg_tokens = mean(tokens)
     return {"pass_rate": None if mean(rates) is None else round(mean(rates), 4),
             "time_seconds": None if mean(times) is None else round(mean(times), 2),
             "tokens": None if avg_tokens is None else round(avg_tokens),
-            "runs": len(rates), **({"errored_runs": errored} if errored else {}),
-            "_majority": {t: sum(v) * 2 > len(v) for t, v in verdicts.items()}}
+            "runs": len(rates), "counts": counts,
+            "_majority": {t: sum(v) * 2 > len(v) for t, v in verdicts.items()},
+            "_assertions": {
+                t: {"text": assertion_texts[t], "passed": sum(v), "total": len(v),
+                    "rate": round(sum(v) / len(v), 4)}
+                for t, v in verdicts.items()
+            }}
 
 
 def delta(a, b):
@@ -103,12 +130,32 @@ def main() -> int:
         rows = [configs[name] for configs in per_eval.values() if name in configs]
         summary[name] = {"pass_rate": spread([r["pass_rate"] for r in rows]),
                          "time_seconds": spread([r["time_seconds"] for r in rows], 2),
-                         "tokens": spread([r["tokens"] for r in rows], 0)}
+                         "tokens": spread([r["tokens"] for r in rows], 0),
+                         "counts": {
+                             key: sum(r.get("counts", {}).get(key, 0) for r in rows)
+                             for key in ("requested_runs", "completed_runs", "errored_runs",
+                                         "timed_out_runs", "untreated_runs",
+                                         "missing_grading_runs", "invalid_grading_runs",
+                                         "missing_token_runs")
+                         }}
     if baseline:
-        summary["delta"] = {m: delta(summary[primary][m]["mean"], summary[baseline][m]["mean"])
-                            for m in ("pass_rate", "time_seconds", "tokens")}
+        paired = [(configs[primary], configs[baseline]) for configs in per_eval.values()
+                  if primary in configs and baseline in configs and
+                  configs[primary]["pass_rate"] is not None and
+                  configs[baseline]["pass_rate"] is not None]
+        summary["delta"] = {
+            m: (round(statistics.fmean(values), 4) if values else None)
+            for m, values in {
+                "pass_rate": [a["pass_rate"] - b["pass_rate"] for a, b in paired],
+                "time_seconds": [a["time_seconds"] - b["time_seconds"] for a, b in paired
+                                 if a["time_seconds"] is not None and b["time_seconds"] is not None],
+                "tokens": [a["tokens"] - b["tokens"] for a, b in paired
+                           if a["tokens"] is not None and b["tokens"] is not None],
+            }.items()
+        }
         if summary["delta"]["tokens"] is not None:
             summary["delta"]["tokens"] = round(summary["delta"]["tokens"])
+        summary["delta_evals"] = len(paired)
 
     patterns = {"pass_both": [], "fail_both": [], "primary_only": [], "baseline_only": []}
     if baseline:
@@ -116,9 +163,12 @@ def main() -> int:
             if primary not in configs or baseline not in configs:
                 continue
             p, b = configs[primary]["_majority"], configs[baseline]["_majority"]
-            for text in p.keys() & b.keys():
+            for assertion_id in p.keys() & b.keys():
                 key = {(True, True): "pass_both", (False, False): "fail_both",
-                       (True, False): "primary_only", (False, True): "baseline_only"}[(p[text], b[text])]
+                       (True, False): "primary_only", (False, True): "baseline_only"}[
+                           (p[assertion_id], b[assertion_id])]
+                text = configs[primary].get("_assertions", {}).get(assertion_id, {}).get(
+                    "text", assertion_id)
                 patterns[key].append(f"{eval_name}: {text}")
         for value in patterns.values():
             value.sort()
@@ -130,7 +180,9 @@ def main() -> int:
                      "agent": config.get("agent"), "model": config.get("model"),
                      "primary": primary, "baseline": baseline, "timestamp": utc_now()},
         "evals": [{"name": eval_name,
-                   **{c: {k: v for k, v in d.items() if k != "_majority"}
+                   **{c: {k: v for k, v in d.items()
+                          if k not in ("_majority", "_assertions")}
+                       | {"assertions": d.get("_assertions", {})}
                       for c, d in configs.items()}}
                   for eval_name, configs in per_eval.items()],
         "run_summary": summary,
