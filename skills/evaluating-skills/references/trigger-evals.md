@@ -5,7 +5,8 @@ description alone decides whether the skill is ever used.
 
 ## Write the query set
 
-Store it in `<skill>/evals/trigger-queries.json` (format: `references/schemas.md`).
+Store it in `<skill>/evals/trigger-queries.json`, using the trigger-query schema
+documented in this skill's references.
 
 - About 20 queries: 8–12 should trigger, 8–12 should not.
 - Should-trigger queries vary phrasing (casual, terse, with typos), explicitness

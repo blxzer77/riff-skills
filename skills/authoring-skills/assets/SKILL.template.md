@@ -1,6 +1,6 @@
 ---
 name: doing-the-thing
-description: Does <the thing> for <whom or what>, <key outcome>. Use when <user intents and situations, including indirect ones>. Not for <nearest neighboring request or skill>.
+description: Replace this with a third-person description of what the skill does, with the key use case first. Use when the relevant user intent or situation occurs, including indirect ones. Not for the nearest neighboring request or skill.
 license: Apache-2.0
 ---
 

@@ -2,7 +2,7 @@
 
 Contents: [Adapters](#adapters) · [pi](#pi) · [claude-code](#claude-code) · [codex](#codex-unverified) · [command](#command-generic) · [Caveats](#caveats-for-every-agent) · [Adding an adapter](#adding-an-adapter)
 
-The eval scripts drive agents only through `scripts/agents.py`. Pick one with
+The eval scripts drive agents through the repository's adapter layer. Pick one with
 `--agent <name>`; `--agent-bin`, `--agent-home` and `--model` pass through.
 
 ## Adapters
@@ -96,8 +96,8 @@ run_triggers.py --skill skills/x --agent command \
 
 ## Adding an adapter
 
-Subclass `Adapter` in `scripts/agents.py`, set `name`, `verified`,
-`skills_subdir` and `streams_events`, implement `command`, `parse`, `complete`
+Subclass `Adapter` in the adapter module, set `name`, `verified`, `skills_subdir`
+and `streams_events`, implement `command`, `parse`, `complete`
 (and `detect_line` if the agent streams events), then register it in
 `ADAPTERS`. Verify it end to end on a toy skill before you mark it verified:
 

@@ -36,6 +36,10 @@ LINK_RE = re.compile(r"\]\(([^)#\s]+)(?:#[^)]*)?\)")
 CODE_PATH_RE = re.compile(r"`((?:references|scripts|assets)/[^`\s]+)`")
 
 
+def is_external_target(target: str) -> bool:
+    return bool(re.match(r"^[a-z]+://", target) or target.startswith(("mailto:", "#")))
+
+
 class Report:
     def __init__(self) -> None:
         self.errors: list[str] = []
@@ -133,20 +137,50 @@ def check_skill(skill_dir: Path, rep: Report) -> str | None:
 
 
 def check_references(skill_dir: Path, where: str, rep: Report) -> None:
-    md_files = [skill_dir / "SKILL.md", *sorted((skill_dir / "references").glob("*.md"))]
+    skill_md = skill_dir / "SKILL.md"
+    skill_text = skill_md.read_text(encoding="utf-8")
+    md_files = [skill_md, *sorted((skill_dir / "references").glob("*.md"))]
     for md in md_files:
         text = md.read_text(encoding="utf-8")
         targets = [m.group(1) for m in LINK_RE.finditer(text)]
         if md.name == "SKILL.md":
             targets += [m.group(1) for m in CODE_PATH_RE.finditer(text)]
+        elif md.parent.name == "references":
+            for match in CODE_PATH_RE.finditer(text):
+                target = match.group(1)
+                if (skill_dir / target).is_file():
+                    rep.error(
+                        f"{where}/{md.relative_to(skill_dir)}",
+                        "reference files must link from SKILL.md, not to each other: "
+                        f"{target}",
+                    )
         for target in targets:
-            if re.match(r"^[a-z]+://", target) or target.startswith("mailto:"):
+            if is_external_target(target):
                 continue
             if "<" in target or "*" in target:
                 continue
             resolved = skill_dir / target if md.name == "SKILL.md" else md.parent / target
             if not resolved.exists():
                 rep.error(f"{where}/{md.relative_to(skill_dir)}", f"referenced path does not exist: {target}")
+            elif md.parent.name == "references" and resolved.is_file():
+                rep.error(
+                    f"{where}/{md.relative_to(skill_dir)}",
+                    "reference files must link from SKILL.md, not to each other: "
+                    f"{target}",
+                )
+
+    for directory_name in ("references", "assets", "scripts"):
+        directory = skill_dir / directory_name
+        for bundled in sorted(directory.glob("*")):
+            if not bundled.is_file() or bundled.name == "__pycache__":
+                continue
+            relative = bundled.relative_to(skill_dir).as_posix()
+            if relative not in skill_text:
+                rep.error(
+                    f"{where}/SKILL.md",
+                    f"bundled file is not referenced from SKILL.md: {relative}",
+                )
+
     for ref in sorted((skill_dir / "references").glob("**/*")):
         if ref.is_file() and ref.parent != skill_dir / "references":
             rep.warn(where, f"nested reference {ref.relative_to(skill_dir)}; keep references one level deep")

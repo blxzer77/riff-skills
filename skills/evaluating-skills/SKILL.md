@@ -47,6 +47,20 @@ All scripts are Python 3.11+ standard library; run them, don't read them. Each t
 | `scripts/run_triggers.py` | Measure trigger rates for a query set or a candidate description |
 | `scripts/split_queries.py` | Assign a fixed, stratified train/validation split |
 
+The supporting modules `scripts/agents.py`, `scripts/common.py`, and
+`scripts/sandbox.py` are imported by these commands; do not run them directly.
+
+## References
+
+- `references/static-review.md` — read for the static-review rubric.
+- `references/trigger-evals.md` — read for trigger-query design and description tuning.
+- `references/output-evals.md` — read for output benchmark design and iteration.
+- `references/agents.md` — read before choosing an agent adapter or interpreting its logs.
+- `references/schemas.md` — read when creating or inspecting eval artifacts.
+- `references/grader.md` — read when grading model outputs or reviewing grader feedback.
+- `references/analyzer.md` — read when interpreting benchmark patterns.
+- `references/comparator.md` — read for a blind comparison of skill versions.
+
 Workspaces default to `.workspace/<skill-name>/` in the current directory. Keep that
 path out of version control and away from any directory agents scan for skills.
 
@@ -62,7 +76,7 @@ that produced it.
 
 ## Gotchas
 
-- Global instructions leak into runs. A user-level `AGENTS.md`/`CLAUDE.md` or
+- Global instructions leak into runs. User-level agent instruction files or
   globally installed skills change results; the adapters disable them, and manual
   runs must too.
 - Agents skip skills for simple one-step requests. A trigger miss on a trivial query

@@ -7,7 +7,8 @@ without it (or than the previous version), and what that costs.
 
 ## Write cases
 
-Store cases in `<skill>/evals/evals.json` (format: `references/schemas.md`).
+Store cases in `<skill>/evals/evals.json`, using the eval-file schema documented in
+this skill's references.
 
 - Start with three. Expand only after the first iteration shows what matters.
 - Write prompts the way the user actually writes: file paths, backstory, casual
@@ -31,7 +32,8 @@ python3 scripts/run_evals.py --skill <skill-dir> --agent <agent> [--model <m>]
 - Baseline is `without_skill` for a new skill. When revising, snapshot first
   (`cp -r <skill-dir> <workspace>/skill-snapshot`) and pass `--baseline old_skill`.
 - Each run gets a fresh sandbox and a clean agent context; the user's global
-  instructions and other skills must not load (see `references/agents.md`).
+  instructions and other skills must not load. Read the Agent adapters reference
+  before choosing an adapter or interpreting its logs.
 - Use `--runs 3` once assertions exist; single runs are for the first look.
 - Evaluate with every agent and model the skill must serve; behavior differs.
 
@@ -66,10 +68,10 @@ python3 scripts/grade.py --iteration <workspace>/iteration-N --skill <skill-dir>
 python3 scripts/aggregate.py --iteration <workspace>/iteration-N
 ```
 
-The grader follows `references/grader.md`. Read its `eval_feedback`; weak assertions
+The grader follows the Grader reference. Read its `eval_feedback`; weak assertions
 are fixed before the next iteration, not after the skill "passes".
 
-Then read `benchmark.md` with `references/analyzer.md` in mind:
+Then read `benchmark.md` with the Analyzer reference in mind:
 
 | Pattern | Meaning | Action |
 |---|---|---|
@@ -87,7 +89,7 @@ Show the user each case: prompt, both outputs, grades. Record one line per case 
 `feedback.json`; empty means no complaint. Specific beats general: "test mocks the
 repository it is supposed to verify" is actionable, "tests are weak" is not.
 
-For a holistic A/B judgment, use `references/comparator.md` with a reviewer that has
+For a holistic A/B judgment, use the Comparator reference with a reviewer that has
 not seen the skill.
 
 ## Iterate

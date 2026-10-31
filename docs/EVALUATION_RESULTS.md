@@ -1,9 +1,12 @@
 # Evaluation results
 
-> Last updated: 2026-10-30
-> Agent: Pi
+> Historical benchmark recorded: 2026-10-30
+> Agent/model: Pi default configuration
 > Baseline: same prompts without the skill
 > Runs: two repetitions per eval case
+>
+> Current policy (2026-10-31): run new evaluations only with local cometix and
+> `deepseek-flash`; do not compare these results directly with the historical Pi run.
 
 ## `writing-tests`
 

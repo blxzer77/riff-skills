@@ -99,20 +99,17 @@ e519d0dd4d16be63b956fd35ab52fd6644840328
 
 ## 评测状态
 
-已用 Pi 对两个试点做过 with-skill / without-skill benchmark：
+历史上已用 Pi 对两个试点做过 with-skill / without-skill benchmark：
 
 - `writing-tests`：with-skill pass rate `1.00`，baseline `0.62`。
 - `writing-adrs`：with-skill pass rate `0.94`，baseline `0.85`。
 
-详细数据、解释和限制见 `docs/EVALUATION_RESULTS.md`。
-
-重要：当前结果是方向性证据，不是统计学结论。每个 eval 只运行了两次，且使用 Pi 的默认模型配置；不同 agent/model 需要重新测量。
+这些结果只作为历史方向性证据，不与当前 cometix/deepseek-flash 结果直接比较。详细数据、解释和限制见 `docs/EVALUATION_RESULTS.md`。
 
 ## 评测系统的已知事实
 
-- Pi adapter：已验证。
-- Claude Code-compatible adapter：已用本机 `cometix` 验证。
-- Codex adapter：按官方 CLI 文档实现，本机没有 Codex CLI，尚未实跑。
+- 当前只用本机 `cometix` 运行评测，模型固定为 `deepseek-flash`；不做 Pi、Codex、Nyan 或跨 agent/model 对比。
+- `cometix` 通过 Claude Code-compatible adapter 接入；评测时使用独立的 bwrap 包装，避免 agent 离开 sandbox 读取本机其他项目。
 - `run_evals.py` 使用独立 sandbox，并对 agent 终态 API 错误做重试。
 - 429/rate-limit 运行不会再被当成 skill 质量失败；错误运行写入 `timing.json` 的 `error` 并从 benchmark 排除。
 - grader 会读取工具调用日志，因此可以验证“先看到测试失败，再改生产代码”这类过程断言。
@@ -128,24 +125,25 @@ e519d0dd4d16be63b956fd35ab52fd6644840328
    ```
 
 2. 阅读本文件和 `docs/EVALUATION_RESULTS.md`，再阅读 `skills/evaluating-skills/SKILL.md`。
-3. 重新运行两个试点的 trigger eval，降低并发，避免模型端 rate limit：
+3. 只用本机 cometix 和 `deepseek-flash` 重新运行两个试点的 trigger eval，降低并发，避免模型端 rate limit：
 
    ```bash
+   export RIFF_AGENT_ARGS="--agent claude-code --agent-bin $HOME/.cache/riff-skills/bin/cometix-sandboxed --agent-home $HOME/.cache/riff-skills/cometix-home --model deepseek-flash"
    python3 skills/evaluating-skills/scripts/run_triggers.py \
-     --skill skills/writing-tests --agent pi --set all --runs 3 --jobs 1
+     --skill skills/writing-tests $RIFF_AGENT_ARGS --set all --runs 3 --jobs 1
    python3 skills/evaluating-skills/scripts/run_triggers.py \
-     --skill skills/writing-adrs --agent pi --set all --runs 3 --jobs 1
+     --skill skills/writing-adrs $RIFF_AGENT_ARGS --set all --runs 3 --jobs 1
    ```
 
 4. 调整 description 前先看 train/validation 结果，不要根据 validation 过拟合。
-5. 对 `designing-modules`、`designing-apis`、`reviewing-code`、`selecting-technologies`、`reviewing-designs`、`building-llm-applications` 逐个跑静态检查和至少一轮 Pi benchmark。
+5. 对其余 6 个 skill 逐个跑静态检查，并使用同一 cometix/deepseek-flash 配置至少跑一轮 benchmark。
 6. 如果安装到个人项目，优先复制对应的 `assets/agents-snippet.md` 到项目自己的 `AGENTS.md`；skill 只在加载时生效，不能单独保证每次都触发。
-7. Codex 可用后验证 `codex` adapter；如果事件格式不同，修改 `skills/evaluating-skills/scripts/agents.py` 和 `references/agents.md`，不要把 Codex 专用字段扩散进通用 skill 正文。
+7. 不做 Pi、Codex、Nyan 或跨 agent/model 对比；如果以后改变评测政策，再单独更新本文件和评测结果说明。
 
 ## 不要做的事
 
 - 不要提交 `.workspace/`、agent session、缓存、密钥或全局配置。
 - 未明确要求不要 commit/push 之外的远程操作，例如创建 PR、发布 marketplace release。
-- 不要把 `CLAUDE.md`、Codex 配置或某个 agent 的专用字段写进通用 skill。
+- 不要把某个 agent 的专用配置、工具名、环境变量或字段写进通用 skill。
 - 不要为了让 benchmark 变好而删除困难 eval；先检查 assertion 是否合理、agent 是否 rate limited、fixture 是否可执行。
 - 不要把上游 SDFrame 的未核实事实当作项目事实。

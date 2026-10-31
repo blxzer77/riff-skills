@@ -85,7 +85,7 @@ or a disagreement that has no user/project consequence.
 - <specific strength>
 ```
 
-“No blocking findings” is a valid result. Do not invent concerns to fill the report.
+"No blocking findings" is a valid result. Do not invent concerns to fill the report.
 
 ## Gotchas
 

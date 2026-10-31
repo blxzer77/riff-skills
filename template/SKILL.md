@@ -1,6 +1,6 @@
 ---
 name: template-skill
-description: Replace with what the skill does, third person, key use case first. Use when <user intents and situations>. Not for <nearest neighboring request>.
+description: Replace this with a third-person description of what the skill does, with the key use case first. Use when the relevant user intent or situation occurs. Not for the nearest neighboring request or skill.
 license: Apache-2.0
 ---
 

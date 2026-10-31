@@ -60,4 +60,5 @@ replace, behavior assertions.
 - [ ] One example test per layer you will use, as a pattern to copy.
 - [ ] A fast default command (small + medium tests) that runs in seconds to a minute.
 - [ ] A test database or service strategy decided once (containers, in-memory fake).
-- [ ] Add `assets/agents-snippet.md` to the project's `AGENTS.md`.
+- [ ] Add the skill's always-on test guidance snippet to the project's agent
+      instruction file.
