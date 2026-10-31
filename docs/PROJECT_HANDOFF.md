@@ -110,18 +110,19 @@ e519d0dd4d16be63b956fd35ab52fd6644840328
 
 - 当前只用本机 `cometix` 运行评测，模型固定为 `deepseek-flash`；不做 Pi、Codex、Nyan 或跨 agent/model 对比。
 - `cometix` 通过 Claude Code-compatible adapter 接入；评测时使用独立的 bwrap 包装，避免 agent 离开 sandbox 读取本机其他项目。
-- `run_evals.py` 使用独立 sandbox，并对 agent 终态 API 错误做重试。
-- 429/rate-limit 运行不会再被当成 skill 质量失败；错误运行写入 `timing.json` 的 `error` 并从 benchmark 排除。
-- grader 会读取工具调用日志，因此可以验证“先看到测试失败，再改生产代码”这类过程断言。
+- `run_evals.py` 使用独立 sandbox，并对 agent 终态 API 错误做重试；每次 attempt 保留，成本统计包含所有 attempt。
+- timeout、429/rate-limit、API error、invalid grading 和未加载 skill 的 with-run 不进入 treatment effect；它们分别记录在 `timing.json`/`benchmark.json`。
+- grader 使用稳定 assertion ID，并读取 treated/baseline 元数据；无法可靠关联证据时 grading 标为 invalid。
+- aggregate 只对同一 eval 的有效 with/baseline 配对结果计算 delta，并保留 requested/completed/retry/untreated/error 计数。
 - tokens 只能在同一 agent/model 内比较；某些 agent 会把 cache read 算入 token 统计。
 
 ## 第二阶段状态
 
 - 已按官方规范和最佳实践完成内容审查，并修正无条件规则、评测断言、review fixture 和测试 references。
-- 已用 cometix/deepseek-flash 对 `authoring-skills`、`building-llm-applications`、`designing-apis`、`reviewing-code`、`reviewing-designs`、`selecting-technologies`、`writing-adrs`、`writing-tests` 做定向评测；结果和排除项见 `docs/EVALUATION_RESULTS.md`。
-- `selecting-technologies` 的 popularity output case 因 with/without 都通过且成本过高已删除；相似 query 仍保留在 trigger eval，最终三 case 与 baseline 持平。
-- `designing-modules` 本轮 with-skill 未加载，结果排除，不据此判断 skill 质量。
-- `evaluating-skills` 的 baseline trigger-query case 连续两次超时，未作为质量失败计入。
+- 已提交 treatment-aware harness：`ef6c8c5`。它区分 routing、treated body effect、baseline 和 infrastructure failure。
+- treatment-aware 结果显示：`designing-apis`、`writing-adrs`、`writing-tests`、`authoring-skills` 在关键 case 上有增益；`building-llm-applications`、`selecting-technologies`、`designing-modules` 当前 case 为 pass-both；`reviewing-code` 当前 case 没有增益；`reviewing-designs` 未 treated。
+- 这些结论仍是每个 case 三次运行的方向性证据，不能泛化为 skill 的全部能力；详细结果和成本见 `docs/EVALUATION_RESULTS.md`。
+- 不再根据旧的、未区分 treatment 的 benchmark 删除 skill；先换成真正能区分 baseline 的 case，再做移除决定。
 
 ## 下一步顺序
 
@@ -133,11 +134,13 @@ e519d0dd4d16be63b956fd35ab52fd6644840328
    ```
 
 2. 阅读本文件和 `docs/EVALUATION_RESULTS.md`，再阅读 `skills/evaluating-skills/SKILL.md`。
-3. 若需要补充 discovery 数据，只用本机 cometix 和 `deepseek-flash`，先固定 train/validation split，再低并发重跑；当前 `writing-tests` description 已停止调优。
-4. 可选地为 `writing-adrs` 和 `designing-modules` 补一轮同配置 benchmark；它们不是第二阶段已确认问题的阻塞项。
-5. 评测新 skill 前先跑静态检查，并确保 fixture、机械断言和 output eval 能区分 with/without；遇到 timeout 或 rate limit 时排除运行，不修改 skill。
-6. 如果安装到个人项目，优先复制对应的 `assets/agents-snippet.md` 到项目自己的 agent instruction file；skill 只在加载时生效，不能单独保证每次都触发。
-7. 不做 Pi、Codex、Nyan 或跨 agent/model 对比；如果以后改变评测政策，再单独更新本文件和评测结果说明。
+3. 不再为 pass-both case 堆正文规则；先为 `building-llm-applications`、`designing-modules`、`selecting-technologies` 设计真正 baseline 会失败的隐式/边界 fixture，再复测。
+4. 为 `reviewing-designs` 先优化 trigger description；没有 treated run 时不评价正文质量。
+5. 对 `reviewing-code` 检查其 security assertion 是否仍过宽；当前 treatment-aware 结果不支持继续维护其现有复杂规则。
+6. 如果新 fixture 仍无法产生稳定 skill-only 增益（同时考虑成本和严重风险），将 skill 标记为候选移除或合并，而不是继续加规则。
+7. 评测新 skill 前先跑静态检查，并确保 fixture、机械断言和 output eval 能区分 with/without；遇到 timeout 或 rate limit 时排除运行，不修改 skill。
+8. 如果安装到个人项目，优先复制对应的 `assets/agents-snippet.md` 到项目自己的 agent instruction file；skill 只在加载时生效，不能单独保证每次都触发。
+9. 不做 Pi、Codex、Nyan 或跨 agent/model 对比；如果以后改变评测政策，再单独更新本文件和评测结果说明。
 
 ## 不要做的事
 

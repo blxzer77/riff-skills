@@ -149,8 +149,10 @@ scoring. A run whose agent ended in an error state after all retries adds `"erro
 transcript does not prove the skill was loaded has `"treatment_status":
 "not_treated"`; it is reported as a routing result and excluded from body-effect
 comparisons. Retry attempt records are retained under `attempts` rather than
-overwriting the original attempt. Token accounting differs per agent (some include
-cache reads), so compare tokens within one agent only.
+overwriting the original attempt. `duration_ms` and `total_tokens` include all
+attempts; `final_duration_ms` and `final_tokens` describe only the last attempt.
+Token accounting differs per agent (some include cache reads), so compare tokens
+within one agent only.
 
 ### grading.json
 

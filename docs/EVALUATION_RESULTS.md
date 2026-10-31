@@ -8,7 +8,38 @@
 > Current policy (2026-10-31): run new evaluations only with local cometix and
 > `deepseek-flash`; do not compare these results directly with the historical Pi run.
 
-## Content-revision benchmark (2026-10-31)
+## Treatment-aware confirmation (2026-10-31)
+
+These are the first results from the treatment-aware harness (`ef6c8c5`): a
+with-skill run counts only when its transcript proves the skill loaded; timeouts,
+API errors, invalid grading, and untreated runs are excluded from the treatment
+effect and reported separately. Each row is one case with three low-concurrency
+runs per configuration. Results are directional evidence, not statistical proof.
+
+| Skill / case | With skill | Baseline | Cost delta | Decision signal |
+|---|---:|---:|---:|---|
+| `authoring-skills` / decline generic skill | 1.00 | 0.00 | -9.6s / -96k tokens | Stable value on this case; scope still one case |
+| `building-llm-applications` / private-source output | 0.89 | 0.89 | +10.0s / +99k tokens | Pass-both; no measured value |
+| `designing-apis` / retryable export | 1.00 | 0.33 | +14.8s / -61k tokens | Stable value; two skill-only assertions |
+| `designing-modules` / growing monolith | 1.00 | 1.00 | +5.1s / +56k tokens | Pass-both; case does not discriminate |
+| `reviewing-code` / parser-client SSRF | 0.73 | 0.80 | +68.0s / +335k tokens | No value; slight regression |
+| `reviewing-designs` / overbuilt project | not treated | 1.00 | — | Description did not load skill; no body conclusion |
+| `selecting-technologies` / small project | 1.00 | 1.00 | +75.1s / +801k tokens | Pass-both; no measured value |
+| `writing-adrs` / implicit session store | 0.89 | 0.00 | +309.6s / +2.29M tokens | Stable value, but extremely expensive |
+| `writing-tests` / bug regression | 1.00 | 0.56 | +13.1s / +128k tokens | Process assertion skill-only |
+
+A pass-both result means the case did not demonstrate incremental skill value; it
+does not prove the skill is useless. Before removal, replace the case with a harder,
+implicit case that the baseline demonstrably fails. If the replacement also shows no
+stable gain while adding cost, removal or merging is rational. `reviewing-code` is
+not retained as a proven value case: its earlier apparent SSRF gain disappeared
+under repeated treatment-aware grading.
+
+The timeout/error policy and stable assertion IDs are part of the harness, not a
+claim that the model is deterministic. Retry counts and all-attempt costs are
+recorded; a final successful retry remains usable but its retry cost is included.
+
+## Pre-treatment content-revision benchmark (historical, not directly comparable)
 
 All runs below used the local cometix adapter with `deepseek-flash`, one run per
 case, and a fresh sandbox per configuration. These are directional results, not

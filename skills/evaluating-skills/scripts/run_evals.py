@@ -95,9 +95,15 @@ def run_one(job: dict, adapter, model, timeout, sandbox_root, retries) -> dict:
         "baseline" if expected_skill is None else
         "treated" if loaded else "not_treated"
     )
-    timing = {"total_tokens": result.tokens, "duration_ms": proc.duration_ms,
+    attempt_tokens = [a["total_tokens"] for a in attempts if a["total_tokens"] is not None]
+    timing = {"total_tokens": sum(attempt_tokens) if attempt_tokens else None,
+              "final_tokens": result.tokens,
+              "duration_ms": sum(a["duration_ms"] for a in attempts),
+              "final_duration_ms": proc.duration_ms,
               "agent": adapter.name, "model": model, "configuration": job["config"],
               "exit_code": proc.exit_code, "attempts": attempts,
+              "retry_count": max(0, len(attempts) - 1),
+              "retry_error_count": sum(1 for a in attempts if a["error"] is not None),
               "skill_loaded": loaded, "skill_load_evidence": sorted(result.read_skill),
               "treatment_status": treatment_status}
     if proc.timed_out:

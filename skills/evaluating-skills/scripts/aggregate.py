@@ -41,7 +41,8 @@ def collect(config_dir: Path) -> dict:
     rates, times, tokens, verdicts, assertion_texts = [], [], [], {}, {}
     counts = {"requested_runs": 0, "completed_runs": 0, "errored_runs": 0,
               "timed_out_runs": 0, "untreated_runs": 0, "missing_grading_runs": 0,
-              "invalid_grading_runs": 0, "missing_token_runs": 0}
+              "invalid_grading_runs": 0, "missing_token_runs": 0, "retry_runs": 0,
+              "retry_attempts": 0, "retry_error_attempts": 0}
     runs = sorted(config_dir.glob("run-*"))
     counts["requested_runs"] = len(runs)
     for run in runs:
@@ -70,6 +71,10 @@ def collect(config_dir: Path) -> dict:
         summary = grading.get("summary", {})
         rates.append(summary.get("pass_rate"))
         counts["completed_runs"] += 1
+        retry_count = timing.get("retry_count", 0)
+        counts["retry_runs"] += int(retry_count > 0)
+        counts["retry_attempts"] += retry_count
+        counts["retry_error_attempts"] += timing.get("retry_error_count", 0)
         if timing.get("duration_ms") is not None:
             times.append(timing["duration_ms"] / 1000)
         token_count = timing.get("total_tokens")
@@ -136,7 +141,8 @@ def main() -> int:
                              for key in ("requested_runs", "completed_runs", "errored_runs",
                                          "timed_out_runs", "untreated_runs",
                                          "missing_grading_runs", "invalid_grading_runs",
-                                         "missing_token_runs")
+                                         "missing_token_runs", "retry_runs", "retry_attempts",
+                                         "retry_error_attempts")
                          }}
     if baseline:
         paired = [(configs[primary], configs[baseline]) for configs in per_eval.values()
