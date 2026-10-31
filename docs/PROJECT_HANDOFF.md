@@ -115,6 +115,14 @@ e519d0dd4d16be63b956fd35ab52fd6644840328
 - grader 会读取工具调用日志，因此可以验证“先看到测试失败，再改生产代码”这类过程断言。
 - tokens 只能在同一 agent/model 内比较；某些 agent 会把 cache read 算入 token 统计。
 
+## 第二阶段状态
+
+- 已按官方规范和最佳实践完成内容审查，并修正无条件规则、评测断言、review fixture 和测试 references。
+- 已用 cometix/deepseek-flash 对 `authoring-skills`、`building-llm-applications`、`designing-apis`、`reviewing-code`、`reviewing-designs`、`selecting-technologies`、`writing-adrs`、`writing-tests` 做定向评测；结果和排除项见 `docs/EVALUATION_RESULTS.md`。
+- `selecting-technologies` 的 popularity output case 因 with/without 都通过且成本过高已删除；相似 query 仍保留在 trigger eval，最终三 case 与 baseline 持平。
+- `designing-modules` 本轮 with-skill 未加载，结果排除，不据此判断 skill 质量。
+- `evaluating-skills` 的 baseline trigger-query case 连续两次超时，未作为质量失败计入。
+
 ## 下一步顺序
 
 1. 在家拉取后先运行校验：
@@ -125,19 +133,10 @@ e519d0dd4d16be63b956fd35ab52fd6644840328
    ```
 
 2. 阅读本文件和 `docs/EVALUATION_RESULTS.md`，再阅读 `skills/evaluating-skills/SKILL.md`。
-3. 只用本机 cometix 和 `deepseek-flash` 重新运行两个试点的 trigger eval，降低并发，避免模型端 rate limit：
-
-   ```bash
-   export RIFF_AGENT_ARGS="--agent claude-code --agent-bin $HOME/.cache/riff-skills/bin/cometix-sandboxed --agent-home $HOME/.cache/riff-skills/cometix-home --model deepseek-flash"
-   python3 skills/evaluating-skills/scripts/run_triggers.py \
-     --skill skills/writing-tests $RIFF_AGENT_ARGS --set all --runs 3 --jobs 1
-   python3 skills/evaluating-skills/scripts/run_triggers.py \
-     --skill skills/writing-adrs $RIFF_AGENT_ARGS --set all --runs 3 --jobs 1
-   ```
-
-4. 调整 description 前先看 train/validation 结果，不要根据 validation 过拟合。
-5. 对其余 6 个 skill 逐个跑静态检查，并使用同一 cometix/deepseek-flash 配置至少跑一轮 benchmark。
-6. 如果安装到个人项目，优先复制对应的 `assets/agents-snippet.md` 到项目自己的 `AGENTS.md`；skill 只在加载时生效，不能单独保证每次都触发。
+3. 若需要补充 discovery 数据，只用本机 cometix 和 `deepseek-flash`，先固定 train/validation split，再低并发重跑；当前 `writing-tests` description 已停止调优。
+4. 可选地为 `writing-adrs` 和 `designing-modules` 补一轮同配置 benchmark；它们不是第二阶段已确认问题的阻塞项。
+5. 评测新 skill 前先跑静态检查，并确保 fixture、机械断言和 output eval 能区分 with/without；遇到 timeout 或 rate limit 时排除运行，不修改 skill。
+6. 如果安装到个人项目，优先复制对应的 `assets/agents-snippet.md` 到项目自己的 agent instruction file；skill 只在加载时生效，不能单独保证每次都触发。
 7. 不做 Pi、Codex、Nyan 或跨 agent/model 对比；如果以后改变评测政策，再单独更新本文件和评测结果说明。
 
 ## 不要做的事

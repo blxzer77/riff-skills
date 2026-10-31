@@ -10,11 +10,21 @@ A skill is a directory with a `SKILL.md`: YAML frontmatter that every agent read
 startup, and a body the agent reads only after deciding the skill applies. Write for
 any agent that implements the Agent Skills specification, not for one client.
 
+Do not create a skill for generic language, library, or tool knowledge the agent
+already has. If the request lacks a recurring mistake, project convention, explicit
+compliance or safety requirement, or other verifiable behavior to change, stop before
+writing files, explain why the skill would add context cost without value, and ask
+for evidence. Offer a short always-on project instruction only when the request is a
+stable project rule rather than reusable skill behavior.
+
 ## Workflow
 
-- [ ] **Scope.** Name the behavior the skill must change and how you will know it
-      changed. Find evidence the agent gets it wrong today: a transcript, a
-      correction the user keeps making, a failing case. No evidence, no skill.
+- [ ] **Scope.** Name the behavior the skill should change and how you will know it
+      changed. Prefer evidence the agent gets it wrong today: a transcript, a
+      correction the user keeps making, or a failing case. If no history exists,
+      use a concrete project convention, repeated workflow, explicit compliance or
+      safety requirement, or verifiable risk; mark it as a hypothesis and add an
+      eval to test it. Do not create a skill for generic knowledge alone.
 - [ ] **Gather material.** Real artifacts beat general knowledge: the user's
       corrections, project conventions, failure cases, primary sources. Content the
       agent already knows is cost without benefit.

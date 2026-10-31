@@ -34,7 +34,7 @@
       "assertions": [
         "The response questions whether the skill is needed because the agent already knows the topic",
         "The response asks for a concrete recurring mistake or project-specific convention before writing anything",
-        "No SKILL.md consisting of a generic list-comprehension tutorial was created"
+        {"text": "No new generic skill artifact was created", "script": "evals/checks/no_generic_skill_created.py"}
       ]
     }
   ]

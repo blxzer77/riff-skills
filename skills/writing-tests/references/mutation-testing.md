@@ -16,8 +16,10 @@ mutant **survived**: there is behavior no test checks. It is the honest answer t
 
 ## How to use it
 
-1. Run it on the critical module you changed, not the whole codebase; full runs
-   can multiply test time by 10–100×.
+1. Use a mutation tool already supported by the project on the critical module you
+   changed, not the whole codebase; full runs can multiply test time by 10–100×.
+   Do not add a new mutation dependency solely for one check without user or
+   project approval; if no suitable tool exists, hand-write one plausible mutant.
 2. For each survived mutant, decide:
    - A missing behavior test → write the test that kills it.
    - An equivalent mutant (no observable difference) → ignore it.

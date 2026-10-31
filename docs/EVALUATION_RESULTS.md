@@ -8,6 +8,51 @@
 > Current policy (2026-10-31): run new evaluations only with local cometix and
 > `deepseek-flash`; do not compare these results directly with the historical Pi run.
 
+## Content-revision benchmark (2026-10-31)
+
+All runs below used the local cometix adapter with `deepseek-flash`, one run per
+case, and a fresh sandbox per configuration. These are directional results, not
+statistical conclusions.
+
+| Skill / scope | With skill | Baseline | Interpretation |
+|---|---:|---:|---|
+| `authoring-skills`, decline generic skill | 1.00 | 0.00 | New guardrail prevented a generic skill artifact; one case only |
+| `building-llm-applications`, 4 cases | 0.92 | 0.75 | Private-source and simple-first cases added value |
+| `building-llm-applications`, revised RAG case | 1.00 | 0.67 | Split retrieval-quality and answer-quality evaluation was primary-only |
+| `designing-apis`, 3 cases | 1.00 | 0.89 | Retry/authorization/old-client validation was primary-only |
+| `reviewing-code`, 3 fixture cases | 1.00 | 0.93 | Concrete parser/client SSRF finding was primary-only |
+| `reviewing-designs`, 3 cases | 1.00 | 1.00 | No measured quality delta; with-skill cost was higher |
+| `writing-adrs`, 4 cases | 1.00 | 0.70 | Implicit shared-session-store decision was primary-only |
+| `writing-tests`, original 4 cases | 0.67 | 0.67 | Bug-fix process value appeared, but total score was flat |
+| `selecting-technologies`, final 3 cases | 0.89 | 0.89 | No measured quality delta; with-skill cost was higher |
+| `writing-tests`, targeted feature/refactor rerun | 0.50 | 0.50 | Refactor assertion failed in both configurations; not discriminating |
+
+The `reviewing-code` fixture suite now includes authorization/cache, migration, and
+URL-parser boundary cases. Its with-skill cost was approximately `+161k` tokens and
+`+17s` per case aggregate. The `reviewing-designs` run added approximately `+85k`
+tokens and `+19s` with no quality delta, so no further expansion is planned there.
+
+The first `selecting-technologies` run included a popularity-resistance case that
+both configurations passed while the skill used about `+1.45M` tokens and `+170s`.
+That case was removed as a non-discriminating output eval; the similar query remains
+useful for trigger testing. The final three-case rerun remained at baseline parity
+while adding about `+210k` tokens and `+49s`.
+
+The `designing-modules` run is excluded: all with-skill cases finished without
+loading the skill, so it measures description discovery rather than output quality.
+
+## Current trigger evidence
+
+The revised formal description for `writing-tests` produced `15/20` on an exploratory
+run (`train` `9/12`, `validation` `6/8` among completed runs), with two provider/agent
+errors excluded. Candidate descriptions reached `11/12` on train but scored worse on
+validation (`5/8` with two false positives), so they were not adopted. The formal
+description remains the validation-selected version.
+
+The `evaluating-skills` baseline case for writing trigger queries timed out twice at
+1200 seconds. It is excluded rather than treated as a skill failure. The current
+benchmark policy does not infer quality from incomplete baseline runs.
+
 ## `writing-tests`
 
 Iteration 2 benchmark:

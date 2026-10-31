@@ -1,6 +1,6 @@
 ---
 name: writing-tests
-description: Writes tests that catch real regressions, adds them by default whenever behavior changes, reproduces bugs with a failing test before fixing them, and repairs flaky or brittle suites. Use when fixing a bug, adding or changing a feature, refactoring, raising or judging coverage, choosing a test strategy, or when a test is flaky, over-mocked, or keeps breaking on harmless changes, even if the user never mentions tests. Not for configuring CI or load testing.
+description: Writes tests that catch real regressions and preserves observable behavior during fixes, feature work, and code modernization. Use when fixing a bug, adding or changing behavior, refactoring or modernizing code (especially code without tests), raising or judging coverage, choosing a test strategy, or repairing a flaky or over-mocked suite, even if the user only asks for cleanup and never mentions tests. Not for configuring CI or load testing.
 license: Apache-2.0
 metadata:
   verified-on: "2026-10-30"
@@ -8,9 +8,11 @@ metadata:
 
 # Writing tests
 
-Tests are what keep a codebase changeable. A change that alters behavior is not
-finished until some test would fail without it. Write that test as part of the
-change, unprompted, and say what it protects.
+Tests are what keep a codebase changeable. When a change alters observable
+behavior, add or update a behavioral test unless existing coverage already protects
+that behavior or a test is not applicable. For documentation, formatting, pure
+renames, configuration-only changes, and other no-behavior changes, do not add a
+redundant test; state the reason and retain the relevant existing checks.
 
 ## Workflow
 
@@ -24,15 +26,23 @@ change, unprompted, and say what it protects.
 - [ ] Report: the test name, that it failed before and passes now.
 
 **New or changed behavior**
-- [ ] List the behaviors: the normal case, boundaries (empty, one, limit, limit+1),
-      invalid input, and the error paths a user can hit.
-- [ ] One test per behavior, through the public API, at the smallest level that
-      gives confidence (see below).
-- [ ] Run them; delete or fix any test that passes before the code exists.
+- [ ] List the changed observable behaviors: the normal case, relevant boundaries
+      (empty, one, limit, limit+1), domain transitions such as month lengths,
+      leap days, time zones, rounding, or encoding when applicable, invalid input,
+      and user-visible error paths.
+- [ ] Add or update enough tests to cover each meaningful risk, through the public
+      API, at the smallest level that gives confidence (see below). Reuse an
+      existing test when it is the right protection rather than duplicating it.
+- [ ] Run them; delete or fix any new test that passes before the code exists when it
+      is meant to expose a regression.
 
 **Refactor**
-- [ ] If the code lacks tests, first add characterization tests pinning current
-      observable behavior. Then refactor with the suite unchanged and green.
+- [ ] If the code lacks tests, first add persistent characterization tests to the
+      project's normal test suite, pinning current observable behavior. Run that
+      suite against the original code and see it pass before refactoring.
+- [ ] Keep those tests unchanged while refactoring and run them again. An ad hoc
+      comparison script or randomized probe can supplement the suite, but does not
+      replace a durable test file in the project.
 
 **Before reporting done**: run the tests you touched plus the nearest suite. Never
 claim tests pass without running them; if you cannot run them, say so.

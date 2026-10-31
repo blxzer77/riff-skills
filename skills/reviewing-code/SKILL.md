@@ -64,8 +64,11 @@ Before reporting a candidate, trace it from changed lines through the relevant
 execution path. Confirm that it is introduced or worsened by this change, reachable
 in a realistic supported scenario, and actionable. Reproduce with a focused test or
 a precise control-flow/data-flow argument when possible. Check history and sibling
-code for an intentional compatibility choice. Suppress candidates below 80%
-confidence; do not inflate confidence merely because a pattern looks suspicious.
+code for an intentional compatibility choice. Report validated findings at 80%
+confidence or higher; do not inflate confidence merely because a pattern looks
+suspicious. If a plausible blocker or major security/data-integrity risk lacks one
+verification gate, put it in a separate "Needs confirmation" section with the
+missing evidence and a concrete check, rather than presenting it as a finding.
 
 Security concerns require a concrete attacker capability, affected asset, violated
 boundary, and plausible impact. Do not report hypothetical vulnerabilities based
@@ -97,7 +100,9 @@ If no validated findings remain, say exactly:
 No findings. I reviewed <scope>; no change-introduced, actionable defects reached 80% confidence.
 ```
 
-Then list focused checks run and any meaningful review limits.
+Then list focused checks run and any meaningful review limits. If a high-impact risk
+lacks one verification gate, list it separately as `Needs confirmation` with the
+missing evidence and a concrete check; do not mix it with validated findings.
 
 ### Close the loop
 

@@ -28,8 +28,13 @@ python3 scripts/run_triggers.py --skill <skill-dir> --agent <agent> --set all --
 ```
 
 A query's trigger rate is the fraction of runs in which the agent loaded the skill.
-Should-trigger passes at ≥ 0.5; should-not-trigger passes below 0.5. Run against
-every agent the skill must serve; they weigh descriptions differently.
+Use 0.5 as a starting decision threshold for balanced exploratory runs:
+should-trigger queries pass at or above it, and should-not-trigger queries pass
+below it. It is not a universal quality target. Report raw counts, rates, and
+agent errors; with few runs, treat one or two observations as uncertain. If false
+positives and false negatives have different costs, state the tradeoff and choose
+the acceptance rule accordingly instead of hiding it behind one aggregate rate.
+Run against every agent the skill must serve; they weigh descriptions differently.
 
 ## Optimize
 

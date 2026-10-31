@@ -19,8 +19,8 @@
       "id": 3,
       "name": "ai-stream-and-webhook",
       "prompt": "We are adding an AI job that streams tokens to a web client and sends a completion notification to another system. Decide whether to use SSE, polling, or webhooks and define the contracts.",
-      "expected_output": "Uses SSE for suitable one-way live updates and a webhook for cross-system notification, with reconnect/resumption, event IDs, deduplication, signing/authentication, retries, and reconciliation; calls out assumptions.",
-      "assertions": ["The choice is justified by client and delivery needs rather than ideology", "SSE resumption and webhook at-least-once handling are specified", "The answer includes failure and security-sensitive contract details without leaking secrets"]
+      "expected_output": "Chooses a live-update and cross-system delivery design from the stated client and delivery needs, with reconnect/resumption, event IDs, deduplication, authentication, retries, and reconciliation where applicable; calls out assumptions and explains when another option would fit better.",
+      "assertions": ["The choice is justified by client and delivery needs rather than ideology", "The selected live-update mechanism has an explicit reconnect or resumption strategy when disconnects can lose updates", "The selected cross-system delivery mechanism has explicit delivery, authentication, retry, deduplication, and reconciliation behavior where applicable", "The answer permits polling or another design when its stated requirements make it a better fit"]
     }
   ]
 }

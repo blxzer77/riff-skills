@@ -58,15 +58,22 @@ tools, agents, or orchestration only when a simpler call cannot meet the require
   The model may propose; application code decides whether an action is allowed.
 - Return structured outputs with a versioned schema. Treat malformed, incomplete,
   or overconfident output as a handled failure, not as a best-effort success.
-- Retrieval answers cite the source chunks used, apply access control before retrieval,
-  and state what happens when no sufficiently relevant source is found.
+- For user-visible answers that require knowledge grounding, cite the source chunks
+  used when the product permits exposing source references. Apply access control
+  before retrieval and state what happens when no sufficiently relevant source is
+  found. For internal classification or extraction, keep provenance internally when
+  useful instead of forcing citations into the output; treat source metadata as
+  sensitive and do not expose unauthorized identifiers.
 
 ## Evaluation minimum
 
 A useful eval case contains: user task, relevant fixture/context, expected behavior,
 checkable assertions, and a reason it is difficult. Compare with a baseline and keep
-near-miss cases that should not activate a workflow. Test prompt changes, tool schema
-changes, retrieval changes, and model changes separately when possible.
+near-miss cases that should not activate a workflow. For retrieval systems, keep
+retrieval quality (relevance, authorization, freshness, and conflict handling)
+separate from answer quality; otherwise a failing answer cannot reveal which layer
+is responsible. Test prompt changes, tool schema changes, retrieval changes, and
+model changes separately when possible.
 
 ## Gotchas
 

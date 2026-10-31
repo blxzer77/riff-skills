@@ -12,8 +12,9 @@ counterexample. It finds edge cases nobody thought to write.
 | JS/TS | fast-check (4.x) | works with any runner; seeded, reports the seed to replay |
 | Rust | proptest (1.x) | commit `proptest-regressions/` files so failures replay forever |
 
-Use whichever the project already has. Otherwise add the one above as a dev
-dependency.
+Use whichever the project already has. If none is available, start with example
+and invariant tests; add a property-testing dependency only when the expected edge
+space justifies the maintenance and dependency cost.
 
 ## Properties worth testing
 

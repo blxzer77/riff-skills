@@ -17,8 +17,11 @@ cheapest first, and stop at the layer that answers the user's question.
 | 3. Output evals | Does it improve results, at what cost? | 2 × cases × runs | `references/output-evals.md` |
 | 4. Comparison | Which of two versions is better overall? | reviewer passes | `references/comparator.md` |
 
-Default when the user just says "evaluate this skill": layer 1, then layer 3 with a
-`without_skill` baseline (or `old_skill` if a previous version exists), then layer 2.
+When the user does not name a question, start with layer 1, then choose the
+lowest-cost layer that answers the remaining question: layer 2 for discovery,
+layer 3 for behavior and value, and layer 4 only for comparing versions. For a
+complete assessment, run layers 1, 2, and 3 in that order; add layer 4 only when
+two versions need a holistic comparison.
 
 ## Workflow
 

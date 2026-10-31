@@ -1,0 +1,19 @@
+diff --git a/src/gateway.py b/src/gateway.py
+index 8f3a1d2..5adf1c0 100644
+--- a/src/gateway.py
++++ b/src/gateway.py
+@@ -12,13 +12,15 @@ def get_profile(request, cache, profiles):
+     target_id = request.path_params["user_id"]
+     actor = request.user
+-    if actor is None or actor.id != target_id:
+-        return Response(status=403)
+-    key = f"profile:{actor.id}:{target_id}"
++    key = f"profile:{target_id}"
+     cached = cache.get(key)
+     if cached is not None:
+         return Response.json(cached)
++    if actor is None or actor.id != target_id:
++        return Response(status=403)
+     profile = profiles.fetch(target_id)
+     cache.set(key, profile, ttl=60)
+     return Response.json(profile)

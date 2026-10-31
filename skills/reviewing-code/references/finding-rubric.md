@@ -9,7 +9,13 @@ A reportable finding satisfies all four gates:
 3. **Impactful:** it violates a contract or creates a concrete correctness, reliability, security, or data-integrity consequence.
 4. **Actionable:** the author can locate and fix it from the file, line, evidence, and remediation.
 
-Confidence is the reviewer’s probability that all four gates hold. Report only confidence of at least 80%. A suspicious pattern is not evidence. If an assumption is necessary, state it and lower confidence; ask the requester when the assumption changes the result.
+Confidence is the reviewer’s probability that all four gates hold. For ordinary
+findings, report only confidence of at least 80%. A suspicious pattern is not
+evidence. If an assumption is necessary, state it and lower confidence; ask the
+requester when the assumption changes the result. A plausible blocker or major
+security/data-integrity risk with incomplete evidence belongs in a separate
+"Needs confirmation" section with the missing gate and a verification step, not in
+the validated findings list.
 
 Severity is about consequence, not ease of fixing:
 

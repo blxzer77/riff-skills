@@ -22,7 +22,9 @@ reasoning; do not replace the author's design with a second design unless asked.
 - [ ] Check problem, goals, non-goals, constraints, quality attributes, and success
       measures. A solution presented without a measurable problem is a warning.
 - [ ] Check alternatives. Require at least one viable alternative and the reason it
-      lost; do not accept a strawman or a popularity argument.
+      lost; do not accept a strawman or a popularity argument. If the constraints
+      leave no viable alternative, record that conclusion and the evidence instead
+      of inventing one.
 - [ ] Trace boundaries and flows: ownership, dependencies, data, failure paths,
       public contracts, migration, and rollback. Compare the boundary to project
       size and team ownership.
