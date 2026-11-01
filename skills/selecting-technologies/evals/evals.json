@@ -1,7 +1,60 @@
 {
   "skill_name": "selecting-technologies",
   "evals": [
-    {"id": 1, "name": "choose-for-small-project", "prompt": "This small single-instance Node API needs background jobs. We already use Postgres and want to avoid another service. Compare a Postgres-backed queue, Redis/BullMQ, and a hosted queue, then recommend one with a validation step and tell me whether it needs an ADR.", "expected_output": "Inspects the stated constraints, compares viable options, recommends one proportionate choice, states tradeoffs and evidence to verify, and recommends an ADR because the dependency choice is sticky.", "assertions": ["The recommendation explicitly uses the single-instance, existing-Postgres, and avoid-another-service constraints", "At least two viable alternatives and their rejection reasons are stated", "A validation step has a concrete pass/fail outcome", "The response distinguishes current facts that need checking from reasoning"]},
-    {"id": 2, "name": "challenge-novelty", "prompt": "Everyone on the team is excited about a new database that launched this year. Should we replace our stable Postgres setup before we scale? We have no workload benchmark yet.", "expected_output": "Does not recommend replacement from novelty alone; asks or identifies missing requirements and proposes a time-boxed representative benchmark/spike with decision criteria.", "assertions": ["The response does not treat newness or popularity as sufficient evidence", "The proposed spike uses a representative workload and names what result would change the decision", "Operational, migration, and maintenance risks are considered"]},
-    {"id": 3, "name": "inspect-before-choice", "prompt": "Pick an auth library for this repository and wire it in. You can choose whatever is best.", "expected_output": "Inspects project manifests, existing auth/session conventions, deployment and requirements before choosing; if context is unavailable, asks focused questions rather than guessing.", "assertions": ["The response identifies repository evidence it needs before choosing", "The response does not present an unqualified library choice from generic popularity", "Security, migration, and lock-in are part of the comparison"]}  ]
+    {
+      "id": 1,
+      "name": "password-hashing",
+      "prompt": "We store member passwords as plain SHA-256, which I know is bad. Switch to a proper password hashing library, add it to requirements.txt, and keep the tests passing.",
+      "expected_output": "Picks a maintained password-hashing option (for example argon2-cffi, bcrypt, pwdlib, or the standard library's scrypt/PBKDF2) after checking current release status, not passlib, whose last release was 2020-10-08 and which fails at hash time with bcrypt 5.0. A clean install of requirements.txt gives salted slow hashes that verify, and the tests pass.",
+      "files": ["evals/files/password-hashing"],
+      "assertions": [
+        {"id": "deps-maintained", "text": "Every dependency added to requirements.txt has had a release in the last three years (as of 2026-11-02)", "script": "evals/checks/deps_maintained.py"},
+        {"id": "password-storage", "text": "After a clean install of requirements.txt, stored passwords are salted slow hashes that verify, and the tests pass", "script": "evals/checks/password_storage.py"}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "container-node",
+      "prompt": "Add a Dockerfile for this so we can deploy it to our container host.",
+      "expected_output": "Uses a Node.js base image on a currently supported LTS line (22, 24, or 26 as of 2026-11-02), found by checking the current release schedule rather than copying the package.json engines floor (>=18) or a remembered version. Node 18 and 20 are end of life; Current and latest tags are not for production.",
+      "files": ["evals/files/container-node"],
+      "assertions": [
+        {"id": "node-image-supported", "text": "Every Node.js base image is on an Active or Maintenance LTS line as of 2026-11-02", "script": "evals/checks/node_image_supported.py"}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "claude-summary",
+      "prompt": "Add a summarize_ticket(ticket) function to helpdesk that asks Claude for a two-sentence summary of the ticket transcript, using the official Anthropic Python SDK. Add the dependency and a unit test that doesn't hit the network.",
+      "expected_output": "Uses a Claude model ID that is active on 2026-11-02 according to the current model list, checked at run time rather than recalled. Retired IDs such as claude-3-5-sonnet-20241022 or claude-sonnet-4-20250514, the deprecated claude-sonnet-4-5-20250929, and invented IDs fail. Tests pass offline after a clean install.",
+      "files": ["evals/files/claude-summary"],
+      "assertions": [
+        {"id": "model-current", "text": "Every Claude model ID in non-test code is active on 2026-11-02", "script": "evals/checks/claude_model_current.py"},
+        {"id": "tests-pass", "text": "Tests pass without network access after a clean install of requirements.txt", "script": "evals/checks/tests_pass.py"}
+      ]
+    },
+    {
+      "id": 4,
+      "name": "background-email",
+      "prompt": "Signup takes about three seconds because the welcome email is sent inline. Move the email into a background job so signup returns right away.",
+      "expected_output": "Reads the deployment (one small VM, Postgres the only backed-up state, one volunteer maintainer, nobody on call) and keeps the job on what already runs: a Postgres-backed queue or job table with a worker, or an in-process thread or executor, with the trade-off stated. Does not add Redis, RabbitMQ, Celery, RQ, or another broker.",
+      "files": ["evals/files/background-email"],
+      "assertions": [
+        {"id": "no-new-infrastructure", "text": "No new broker, stateful service, or broker-backed dependency was added", "script": "evals/checks/no_new_infrastructure.py"},
+        {"id": "email-off-request-path", "text": "The request path no longer sends mail synchronously and the welcome email is still sent", "script": "evals/checks/email_off_request_path.py"},
+        {"id": "tests-pass", "text": "Tests pass without network access after a clean install of requirements.txt", "script": "evals/checks/tests_pass.py"}
+      ]
+    },
+    {
+      "id": 5,
+      "name": "reuse-http",
+      "prompt": "Add supported_currencies(client) to pricing that fetches https://rates.example/v1/currencies and returns the list of currency codes. Add a test.",
+      "expected_output": "Uses the httpx client the project already depends on and passes in. Adds no HTTP library, writes no comparison or ADR for this small addition, and the tests pass.",
+      "files": ["evals/files/reuse-http"],
+      "assertions": [
+        {"id": "no-added-dependency", "text": "No dependency was added and no new decision document was written", "script": "evals/checks/no_added_dependency.py"},
+        {"id": "currencies-work", "text": "supported_currencies uses the given httpx client, returns the codes, and the tests pass", "script": "evals/checks/currencies_work.py"}
+      ]
+    }
+  ]
 }

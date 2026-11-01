@@ -1,102 +1,122 @@
 [
   {
-    "query": "Should we use Postgres or Redis for this new job queue? The app is one small VM.",
+    "query": "we hash passwords with plain sha256. swap in a real password hashing library",
     "should_trigger": true,
+    "fixture": "evals/files/password-hashing",
     "set": "train"
   },
   {
-    "query": "Pick a framework for the next version of this app; inspect what we already use first.",
+    "query": "add a Dockerfile so we can ship this to fly.io",
     "should_trigger": true,
+    "fixture": "evals/files/password-hashing",
     "set": "train"
   },
   {
-    "query": "This new tool is trending everywhere — should we replace our stable dependency with it?",
+    "query": "which python version should the CI matrix and the container use?",
     "should_trigger": true,
+    "fixture": "evals/files/password-hashing",
     "set": "validation"
   },
   {
-    "query": "Compare hosting options for this service, including lock-in and how we'd leave later.",
+    "query": "set up rate limiting on login, use whatever library people use for that now",
     "should_trigger": true,
+    "fixture": "evals/files/password-hashing",
     "set": "validation"
   },
   {
-    "query": "We need to choose a model provider for an AI feature; cost and exit path matter.",
+    "query": "we want an LLM to draft replies to member emails. wire up the API client and pick a model",
     "should_trigger": true,
+    "fixture": "evals/files/password-hashing",
     "set": "train"
   },
   {
-    "query": "Is this database mature enough for a production personal project? Check current evidence.",
+    "query": "should member accounts move from this in-memory dict to sqlite or postgres? it's a small club site",
     "should_trigger": true,
+    "fixture": "evals/files/password-hashing",
     "set": "train"
   },
   {
-    "query": "We are adding a new external payment provider. Make the decision and record the tradeoffs.",
+    "query": "add JWT login tokens to this project",
     "should_trigger": true,
+    "fixture": "evals/files/password-hashing",
     "set": "train"
   },
   {
-    "query": "Which queue library is best? Don't inspect the repo, just pick the popular one.",
+    "query": "is passlib still a good choice for new code?",
     "should_trigger": true,
+    "fixture": "evals/files/password-hashing",
     "set": "validation"
   },
   {
-    "query": "Should we adopt this emerging Rust web framework for our small service?",
+    "query": "we need to send a weekly digest email in the background. what should run the job?",
     "should_trigger": true,
+    "fixture": "evals/files/password-hashing",
     "set": "validation"
   },
   {
-    "query": "Evaluate whether replacing our current ORM is worth the migration cost.",
+    "query": "upgrade whatever is outdated in requirements.txt and tell me what you picked",
     "should_trigger": true,
+    "fixture": "evals/files/password-hashing",
     "set": "train"
   },
   {
-    "query": "Rename this variable across the module.",
+    "query": "rename Accounts to MemberAccounts everywhere",
     "should_trigger": false,
+    "fixture": "evals/files/password-hashing",
     "set": "train"
   },
   {
-    "query": "Fix the typo in the README.",
+    "query": "add a test that signup rejects passwords shorter than 8 characters",
     "should_trigger": false,
+    "fixture": "evals/files/password-hashing",
     "set": "train"
   },
   {
-    "query": "Run the existing test suite and report failures.",
+    "query": "make login return False instead of raising when the email has whitespace around it",
     "should_trigger": false,
+    "fixture": "evals/files/password-hashing",
     "set": "validation"
   },
   {
-    "query": "Add a missing null check to this function.",
+    "query": "explain how the login check works, I'm new to the code",
     "should_trigger": false,
+    "fixture": "evals/files/password-hashing",
     "set": "validation"
   },
   {
-    "query": "Explain what dependency injection means.",
+    "query": "add docstrings to accounts.py",
     "should_trigger": false,
+    "fixture": "evals/files/password-hashing",
     "set": "validation"
   },
   {
-    "query": "Format these JSON files.",
+    "query": "review accounts.py for bugs",
     "should_trigger": false,
+    "fixture": "evals/files/password-hashing",
     "set": "validation"
   },
   {
-    "query": "Review this code diff for a bug.",
+    "query": "the README is out of date, update it to describe signup and login",
     "should_trigger": false,
+    "fixture": "evals/files/password-hashing",
     "set": "train"
   },
   {
-    "query": "Write a unit test for this parser.",
+    "query": "lowercase the email address on signup and login",
     "should_trigger": false,
+    "fixture": "evals/files/password-hashing",
     "set": "train"
   },
   {
-    "query": "Update the changelog for the latest release.",
+    "query": "add a stored_hash test for an unknown email",
     "should_trigger": false,
+    "fixture": "evals/files/password-hashing",
     "set": "train"
   },
   {
-    "query": "What does this error message mean?",
+    "query": "write a CONTRIBUTING.md telling people how to run the tests",
     "should_trigger": false,
+    "fixture": "evals/files/password-hashing",
     "set": "train"
   }
 ]

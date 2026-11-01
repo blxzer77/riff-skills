@@ -1,0 +1,99 @@
+{
+ "packages": {
+  "aiohttp": {
+   "last_release": "2026-10-11",
+   "latest": "3.14.5"
+  },
+  "anthropic": {
+   "last_release": "2026-10-23",
+   "latest": "2.3.0"
+  },
+  "argon2": {
+   "last_release": "2015-12-20",
+   "latest": "0.1.10"
+  },
+  "argon2-cffi": {
+   "last_release": "2025-06-03",
+   "latest": "25.1.0"
+  },
+  "bcrypt": {
+   "last_release": "2025-09-25",
+   "latest": "5.0.0"
+  },
+  "celery": {
+   "last_release": "2026-10-18",
+   "latest": "5.6.3"
+  },
+  "dramatiq": {
+   "last_release": "2026-09-02",
+   "latest": "2.2.1"
+  },
+  "flask-bcrypt": {
+   "last_release": "2022-04-05",
+   "latest": "1.0.1"
+  },
+  "hashlib": {
+   "last_release": "2009-07-03",
+   "latest": "20081119"
+  },
+  "httpx": null,
+  "huey": {
+   "last_release": "2026-10-24",
+   "latest": "3.5.3"
+  },
+  "libpass": {
+   "last_release": "2026-10-17",
+   "latest": "1.9.4"
+  },
+  "passlib": {
+   "last_release": "2020-10-08",
+   "latest": "1.7.4"
+  },
+  "pgqueuer": {
+   "last_release": "2026-10-11",
+   "latest": "1.6.0"
+  },
+  "procrastinate": {
+   "last_release": "2026-09-23",
+   "latest": "3.10.0"
+  },
+  "pwdlib": {
+   "last_release": "2026-08-12",
+   "latest": "0.3.1"
+  },
+  "py-bcrypt": {
+   "last_release": "2013-08-25",
+   "latest": "0.4"
+  },
+  "pyjwt": {
+   "last_release": "2026-09-28",
+   "latest": "2.15.1"
+  },
+  "python-jose": {
+   "last_release": "2025-05-28",
+   "latest": "3.5.0"
+  },
+  "redis": {
+   "last_release": "2026-07-30",
+   "latest": "8.1.0"
+  },
+  "requests": {
+   "last_release": "2026-05-14",
+   "latest": "2.34.2"
+  },
+  "rq": {
+   "last_release": "2026-10-28",
+   "latest": "3.0.0"
+  },
+  "scrypt": {
+   "last_release": "2025-08-05",
+   "latest": "0.9.4"
+  },
+  "werkzeug": {
+   "last_release": "2026-09-27",
+   "latest": "3.1.9"
+  }
+ },
+ "retrieved": "2026-11-02",
+ "source": "https://pypi.org/pypi/<name>/json"
+}

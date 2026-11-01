@@ -1,0 +1,42 @@
+# Curation map: published guidance -> skills/selecting-technologies.
+# Anthropic publishes no technology-selection method; the four principles below are
+# adopted from its plugins and docs, and evaluation criteria come from the
+# non-Anthropic primary sources. Fetched 2026-11-02.
+anthropic:
+  repository: anthropics/claude-plugins-official
+  commit: a7ba5b93db0c7c8d17f3f1d25853adca79598a1a
+  adopted:
+    - path: plugins/feature-dev/commands/feature-dev.md
+      principle: read existing patterns first; follow conventions; confirm "whatever is best"
+    - path: plugins/feature-dev/agents/code-architect.md
+      principle: identify the technology stack and similar features before deciding
+    - path: plugins/agent-sdk-dev/commands/new-sdk-app.md
+      principle: check latest versions and version requirements before installing
+    - path: plugins/mcp-server-dev/skills/build-mcp-server/references/versions.md
+      principle: dated "last verified" facts with a re-check command
+    - path: plugins/code-modernization/agents/architecture-critic.md
+      principle: skeptical of the new; simplest design that meets requirements
+  docs:
+    - https://www.anthropic.com/research/building-effective-agents
+    - https://code.claude.com/docs/en/best-practices
+    - https://platform.claude.com/docs/en/models/overview
+    - https://platform.claude.com/docs/en/about-claude/model-deprecations
+primary:
+  - source: ossf/wg-best-practices-os-developers
+    commit: b8ea05ab5c3b2ae341301dfe4f7783dc111f2841
+    file: docs/Concise-Guide-for-Evaluating-Open-Source-Software.md
+  - source: ossf/scorecard
+    commit: 2ef237f4e967d18e600e71aa36ab3be640314650
+    file: docs/checks/internal/checks.yaml
+  - source: nodejs/Release
+    commit: c3e8696312969c95643cb52f05f124c161db87b2
+    file: schedule.json
+  - source: https://endoflife.date/docs/api/v1/
+  - source: https://google.github.io/osv.dev/post-v1-query/
+  - source: https://mcfunley.com/choose-boring-technology
+  - source: https://www.thoughtworks.com/radar/faq
+dropped:
+  - claim: weighted High/Medium/Low scorecard for every choice
+    reason: no source requires it; small reversible choices need one sentence
+  - claim: trend-report template
+    reason: replaced by run-time fact checks; no source for the template

@@ -1,96 +1,84 @@
 ---
 name: selecting-technologies
-description: Makes evidence-based technology choices that fit a project's size, structure, constraints, and likely evolution, while separating stable defaults from genuinely useful new technology. Use when choosing or replacing a language, framework, library, datastore, hosting platform, model provider, or major infrastructure dependency, or when a project is drifting toward a popular option without a written comparison. Not for choosing a tiny implementation dependency already constrained by project conventions.
+description: Chooses which library, runtime version, base image, datastore, queue, hosting service, or model to use, and checks that choice against the project and against current release, end-of-life, and deprecation facts rather than memory. Use when adding a dependency, picking a version or image tag, wiring in an external service or LLM model, replacing a framework or datastore, or when the user asks which option to use, even if they only ask to "add", "switch to", or "set up" something. Not for code changes that use only what the project already depends on.
 license: Apache-2.0
 metadata:
-  verified-on: "2026-10-30"
+  verified-on: "2026-11-02"
 ---
 
 # Selecting technologies
 
-Choose the smallest mature option that meets the real requirements and leaves a
-reversible path. A new technology is not valuable because it is new; it is valuable
-when its advantage matters to this project and outweighs its adoption and lock-in
-cost.
+A technology choice made from memory is made with stale facts. Versions reach end
+of life, packages stop being released, models are retired, and the obvious answer
+from a year ago can now fail at install time. Before naming a dependency, version,
+or model, check what the project already has and what is true today.
 
 ## Workflow
 
-- [ ] **Inspect the project.** Read the package manifests, build/deploy files,
-      existing ADRs, project instructions, and neighboring implementations. Record
-      the current stack, team familiarity, deployment shape, and constraints before
-      naming candidates.
-- [ ] **Define the decision.** Write the capability being chosen, the decision date,
-      the must-haves, nice-to-haves, non-goals, and the cost of being wrong. Separate
-      a reversible library choice from a sticky datastore, language, hosted service,
-      or public protocol.
-- [ ] **Shortlist 2–4 real candidates.** Include the current choice or a no-change
-      option when it is viable. Remove candidates that fail a must-have before
-      scoring; do not use a weighted table to rescue them.
-- [ ] **Verify current facts.** Check official documentation, release activity,
-      supported runtimes, license, security advisories, migration path, and ecosystem
-      evidence on the day of the decision. Record URLs and the date checked. Do not
-      present model memory as a current trend.
-- [ ] **Compare fit and cost.** Use the scorecard in `references/scorecard.md`; use
-      qualitative High/Medium/Low unless measurements justify numbers. State unknowns
-      rather than inventing precision.
-- [ ] **Recommend one path.** Explain why it fits this project's size and structure,
-      what it gives up, confidence level, and the first low-cost validation step. If
-      evidence is insufficient, recommend a time-boxed spike, not a permanent
-      dependency.
-- [ ] **Record sticky choices.** Use `writing-adrs` when the choice is costly to
-      reverse, changes boundaries, or introduces a hosted dependency. Include the
-      rejected alternatives and the evidence behind the choice.
+1. **Read the project first.** Manifests and lockfiles, deployment files (compose,
+   Dockerfile, CI, infrastructure), README and contributing notes, existing ADRs,
+   and neighbouring code. Record the stack, how it is deployed and backed up, and
+   who operates it. Constraints often live only here: how many hosts, who is on
+   call, what gets backed up, which runtime version is pinned.
+2. **Prefer what is already there.** If the existing stack covers the need, use it
+   and stop: no comparison, no new dependency, no ADR. Otherwise prefer the
+   option that adds the fewest new things to run, back up, upgrade, and learn.
+   A new stateful service (broker, cache, search engine) is a large cost for a
+   small team; say what it buys before adding one.
+3. **Check every fact that ages, at run time.** For each candidate dependency,
+   version, image, or model, look up the current state before writing it into
+   code. See `references/checking-facts.md` for where and how. At minimum:
+   - **Maintained**: a release in roughly the last year; not archived or marked
+     deprecated; the registry name is the real project, not a look-alike.
+   - **Supported version**: the runtime or base-image line has not reached end of
+     life; production uses an LTS line where the project offers one.
+   - **Model IDs**: the ID appears as active on the provider's current model or
+     deprecation page. Do not use an ID you cannot find there.
+   - **Advisories**: no known unfixed vulnerability in the version you add.
+   - **Works here**: it installs and runs on the project's runtime version.
+   If you cannot reach the network, say which facts are unchecked and mark them
+   in the code or the reply; do not present remembered versions as current.
+4. **Decide in proportion.** A small, reversible choice (one library behind a
+   function, a patch-level version) needs one sentence of reasoning. A sticky
+   choice (datastore, language, framework, hosted service, public protocol)
+   needs 2–4 real candidates, the deciding constraint, the exit path, and an ADR
+   (use `writing-adrs` if available). If the user said "whatever is best" for a
+   sticky choice, recommend one and confirm before building on it.
+5. **Verify the choice works.** Install it fresh from the manifest you edited and
+   run the tests. Tests must not call live services; use a fake client.
+6. **Report briefly.** Name what you chose, the facts you checked and when, and
+   anything left unverified.
 
-## Decision defaults
+## Defaults
 
-| Situation | Default | Escape hatch |
-|---|---|---|
-| Small project, ordinary web/API capability | Existing language/framework and a boring library | A measured limitation blocks the product or maintenance |
-| New project with unclear boundaries | One deployable with explicit internal modules | Independent scaling, ownership, or release needs are already proven |
-| New datastore | Existing datastore if it fits the access patterns | A concrete query, consistency, scale, or operational requirement fails |
-| Emerging technology | Spike behind a replaceable boundary | It has production evidence relevant to this project and the failure cost is acceptable |
-| Hosted dependency | Keep the integration behind a port and define an exit path | The service is the product requirement and portability is not valuable |
-
-## Output
-
-```markdown
-## Technology decision: <capability>
-
-### Recommendation
-<one choice and confidence: high / medium / low>
-
-### Project fit
-<current structure, scale, constraints, and why this choice fits>
-
-### Alternatives rejected
-- <candidate>: <specific reason>
-
-### Risks and exit path
-- <adoption, lock-in, operational, security, or migration risk>
-
-### Evidence checked
-- <source> — <fact> (checked YYYY-MM-DD)
-
-### Validation step
-<small spike, benchmark, or integration check with a pass/fail criterion>
-```
+| Situation | Default |
+|---|---|
+| The project already has a library for this job | Use it |
+| Background work, existing database, no ops staff | A queue or job table on the existing database, or in-process, before a new broker |
+| New runtime, base image, or version pin | The newest LTS line that is supported today and that the project's code runs on |
+| New package | A maintained, stable release; the standard library when it does the job well |
+| LLM model ID | An active model from the provider's current list, matching the task's needs |
+| Emerging technology | A time-boxed spike behind a small interface, not a migration |
 
 ## Gotchas
 
-- Popularity is not evidence of fit. A technology's adoption outside the project's
-  workload does not prove its operational or migration cost here.
-- "Latest" is a query, not a property in the model's memory. Check current sources
-  and state the check date; if network access is unavailable, mark the fact unknown.
-- A benchmark without the project's workload is a story, not a decision. Prefer a
-  small representative spike over a generic leaderboard.
-- Do not compare a mature option with an emerging one using made-up equal scores.
-  Explain evidence quality and uncertainty separately from fit.
-- A choice that changes a public API, data format, module boundary, or deployment
-  model is an ADR even if the implementation looks small.
+- A version floor in the manifest (`engines`, `python_requires`) is the oldest
+  version the code tolerates, not the version to deploy.
+- A package that tutorials still recommend may have had no release for years and
+  may break with current versions of its own dependencies. Release date and a
+  clean install settle it; reputation does not.
+- Model IDs, prices, and limits are among the fastest-ageing facts. Look them up
+  every time.
+- Popularity, a benchmark on someone else's workload, or "everyone is moving to
+  it" is not evidence of fit here.
+- Adding a service to solve a problem the existing database solves trades a small
+  code change for a permanent operational cost.
 
 ## References
 
-- `references/scorecard.md` — criteria and evidence table; read before comparing candidates.
-- `references/evidence.md` — what to verify for maturity, maintenance, security, and lock-in.
-- `references/trends.md` — how to investigate new technology without chasing novelty.
-- `assets/agents-snippet.md` — always-on project rule for significant technology choices.
+- `references/checking-facts.md` — where to check maintenance, end of life, model
+  status, advisories, and package names, with commands per ecosystem.
+- `references/sticky-decisions.md` — comparing candidates, exit paths, and spikes
+  for choices that are costly to reverse.
+- `references/sources.md` — the published guidance this skill follows.
+- `assets/agents-snippet.md` — always-on project rule for technology choices.

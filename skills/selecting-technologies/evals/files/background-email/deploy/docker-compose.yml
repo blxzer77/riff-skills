@@ -1,0 +1,18 @@
+# Production: a single 2 GB VM. Nightly backups cover the `pgdata` volume only.
+services:
+  web:
+    build: ..
+    command: gunicorn -w 2 -b 0.0.0.0:8000 "app.web:create_app()"
+    environment:
+      DATABASE_URL: postgresql://tidepool@db/tidepool
+      SMTP_HOST: smtp.mailrelay.example
+    depends_on: [db]
+    restart: unless-stopped
+  db:
+    image: postgres:17
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  pgdata:

@@ -8,6 +8,44 @@
 > Current policy (2026-10-31): run new evaluations only with local cometix and
 > `deepseek-flash`; do not compare these results directly with the historical Pi run.
 
+## `selecting-technologies` redesign (2026-11-02, not yet run)
+
+Anthropic publishes no technology-selection method. The skill now follows four
+principles from Anthropic's plugins and docs (read the existing stack first, check
+current versions at run time, simplest option first, skepticism toward the new)
+and takes its concrete criteria from OpenSSF, the Node.js release policy,
+endoflife.date, and OSV (see its `references/sources.md`). The old weighted
+scorecard and trend template had no source and were dropped.
+
+The old cases were pass-both because their prompts named the constraints. The new
+fixture cases name none of them; a correct answer depends on facts that changed
+after common training data, or on constraints written only in repository files:
+
+| Case | What decides it | Mechanical check |
+|---|---|---|
+| password-hashing | passlib's last release is 2020-10-08 and it fails at hash time with bcrypt 5.0 | added deps released within 3 years; clean install gives salted slow hashes that verify |
+| container-node | Node 18 and 20 are end of life; `engines` says `>=18` | every Node base image on Active/Maintenance LTS |
+| claude-summary | many remembered Claude IDs are retired or deprecated | every model ID active on the official deprecations page; tests pass offline |
+| background-email | compose and README: one VM, only Postgres backed up, nobody on call | no new broker or stateful service; mail off the request path; tests pass |
+| reuse-http (decoy) | httpx already in use | no new dependency or decision document; function works with the given client |
+
+Ageing facts are read from dated snapshots under `evals/checks/data/` so a grade
+does not change with the day it runs. Tests and probes run in a network-less
+namespace, so a test that calls a live API fails. Each check was validated on
+hand-written good solutions (including the standard library's scrypt and PBKDF2,
+Postgres job tables, in-process executors, ARG-templated and distroless images,
+model aliases and Bedrock IDs) and near-misses (salted SHA-256, passlib with an
+old bcrypt pinned, Celery with Redis, `node:latest`, invented model IDs), and
+through `grade.py` end to end.
+
+One leakage risk is known: the SKILL.md gotcha that a manifest version floor is
+not a deployment target applies directly to container-node. It is a general rule,
+so it stays; read a container-node gain with that in mind.
+
+No agent run exists yet: the `deepseek-flash` account hit its monthly inference
+cap before the baseline pilot could finish (see below). The first run should be a
+baseline-only pilot to confirm the cases discriminate, then a paired run.
+
 ## `designing-modules` redesign (2026-11-01)
 
 Anthropic and the Claude Code team have published no guidance on module boundaries,
