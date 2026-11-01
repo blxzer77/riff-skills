@@ -1,0 +1,4 @@
+2026-10-30T21:04:11Z deploy start bookshelf@4f2a91c
+2026-10-30T21:04:19Z migrate: applying 0007_add_reminders.sql
+2026-10-30T21:04:19Z sqlite3.OperationalError: database is locked
+2026-10-30T21:04:19Z deploy failed: migration did not complete

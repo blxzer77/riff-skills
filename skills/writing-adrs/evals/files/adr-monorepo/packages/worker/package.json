@@ -1,0 +1,1 @@
+{ "name": "@readwell/worker", "version": "2.3.0", "dependencies": { "express": "^4.21.0" } }

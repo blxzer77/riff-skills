@@ -1,0 +1,1 @@
+{ "name": "@readwell/desktop", "version": "2.3.0", "dependencies": { "better-sqlite3": "^11.5.0", "electron": "^33.0.0" } }

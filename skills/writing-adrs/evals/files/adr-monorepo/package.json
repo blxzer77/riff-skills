@@ -1,0 +1,8 @@
+{
+  "name": "readwell",
+  "private": true,
+  "version": "2.3.0",
+  "workspaces": ["packages/*", "services/*"],
+  "scripts": { "test": "npm test --workspaces" },
+  "devDependencies": { "typescript": "^5.6.0" }
+}
