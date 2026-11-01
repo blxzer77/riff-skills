@@ -53,6 +53,12 @@ directory and these environment variables:
 | `EVAL_FIXTURE` | Pristine copy of the eval's input files |
 | `EVAL_RESPONSE` | Path to the agent's final message (`outputs/response.md`) |
 
+An optional `args` list on a script assertion is passed to the script as
+command-line arguments, so one check can serve several assertions, for example
+`{"id": "reports-bug", "text": "...", "script": "evals/checks/finding_reported.py",
+"args": ["src/app.py", "10", "14"]}`. This is a repository extension; the Agent
+Skills guide does not define it.
+
 Exit code 0 means PASS, anything else FAIL. The last 2,000 characters of stdout
 and stderr become the evidence. Use any interpreter via a shebang.
 

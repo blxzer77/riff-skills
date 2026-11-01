@@ -8,6 +8,54 @@
 > Current policy (2026-10-31): run new evaluations only with local cometix and
 > `deepseek-flash`; do not compare these results directly with the historical Pi run.
 
+## `reviewing-code` redesign (2026-11-01)
+
+The skill was redesigned from the published Anthropic and Claude Code review designs
+listed in `skills/reviewing-code/references/sources.md`: high-signal findings only,
+refute-first verification per candidate, pre-existing defects listed separately,
+explicit false-positive and security exclusion lists, and no mandatory test or
+simplification pass. Its eval suite was rebuilt as paired cases: each contains a
+real defect that must be reported and a decoy from the official false-positive lists
+that must not be. All location assertions are mechanical checks that parse
+`[path:line]` from the response; each check was validated on a good, a near-miss,
+and an empty response before use.
+
+Treatment-aware, three runs per configuration, all runs completed and treated:
+
+| Case | Iteration 5 with / without | Iteration 6 with / without |
+|---|---:|---:|
+| auth-regression (cache before auth; quote-change decoy) | 1.00 / 0.83 | 1.00 / 0.83 |
+| pre-existing-bug (new off-by-one; old bug must be pre-existing) | 1.00 / 0.56 | 1.00 / 0.56 |
+| ssrf-host-vs-path (host-controlled must be found; path-only must not) | 0.78 / 0.67 | 0.89 / 0.67 |
+| sound-change (correct change; no findings expected) | 0.50 / 0.50 | 0.56 / 0.56 |
+| **Mean** | **0.82 / 0.64** | **0.86 / 0.65** |
+| Cost delta | +57s / +197k tokens | +18s / +142k tokens |
+
+Iteration 6 used a corrected `sound-change` fixture: the iteration-5 version accepted
+float discounts, so with-skill runs that reported it found a real defect and the
+expected answer was wrong. The no-findings check was also split so that exact verdict
+wording, which only the skill prescribes, is no longer a pass condition.
+
+The skill-only signal is consistent across both iterations on the three cases with a
+real defect: it finds the authorization bypass, separates the pre-existing bug, and
+reports the host-controlled SSRF more often. On the clean change both configurations
+over-report at the same rate, most often by flagging a "security reviewed" comment.
+
+Two gotchas aimed at that over-reporting were added and compared against the
+previous version (`--baseline old_skill`, iteration 7): 0.97 vs 0.90, with lower cost
+(-31s, -114k tokens). The difference is not attributable to the gotchas: the
+previous version also scored 3/3 on `sound-change` in that iteration, and the gap
+comes from single-run variance elsewhere. They were kept because they cause no
+regression on the real-defect cases and restate the official "comments are not
+evidence" principle, but their incremental value is unproven.
+
+Decision: retain `reviewing-code`. This supersedes the earlier "no value" result
+below, which came from a case whose decisive assertions graded style preferences.
+
+Trigger evaluation with the adopted description: train 10/12 (one API error), validation
+7/8. The remaining false positive is a whole-repository security audit request, a
+validation query; it was not used to revise the description and remains a known limit.
+
 ## Treatment-aware confirmation (2026-10-31)
 
 These are the first results from the treatment-aware harness (`ef6c8c5`): a
@@ -22,7 +70,7 @@ runs per configuration. Results are directional evidence, not statistical proof.
 | `building-llm-applications` / private-source output | 0.89 | 0.89 | +10.0s / +99k tokens | Pass-both; no measured value |
 | `designing-apis` / retryable export | 1.00 | 0.33 | +14.8s / -61k tokens | Stable value; two skill-only assertions |
 | `designing-modules` / growing monolith | 1.00 | 1.00 | +5.1s / +56k tokens | Pass-both; case does not discriminate |
-| `reviewing-code` / parser-client SSRF | 0.73 | 0.80 | +68.0s / +335k tokens | No value; slight regression |
+| `reviewing-code` / parser-client SSRF | 0.73 | 0.80 | +68.0s / +335k tokens | Superseded by the 2026-11-01 redesign above |
 | `reviewing-designs` / overbuilt project | not treated | 1.00 | — | Description did not load skill; no body conclusion |
 | `selecting-technologies` / small project | 1.00 | 1.00 | +75.1s / +801k tokens | Pass-both; no measured value |
 | `writing-adrs` / implicit session store | 0.89 | 0.00 | +309.6s / +2.29M tokens | Stable value, but extremely expensive |
@@ -31,9 +79,10 @@ runs per configuration. Results are directional evidence, not statistical proof.
 A pass-both result means the case did not demonstrate incremental skill value; it
 does not prove the skill is useless. Before removal, replace the case with a harder,
 implicit case that the baseline demonstrably fails. If the replacement also shows no
-stable gain while adding cost, removal or merging is rational. `reviewing-code` is
-not retained as a proven value case: its earlier apparent SSRF gain disappeared
-under repeated treatment-aware grading.
+stable gain while adding cost, removal or merging is rational. The `reviewing-code`
+row was later traced to an eval defect, not a skill defect: its decisive assertions
+graded whether the review discussed timeouts and one disputed parser path, while
+the fixture's clearest vulnerability had no assertion at all.
 
 The timeout/error policy and stable assertion IDs are part of the harness, not a
 claim that the model is deterministic. Retry counts and all-attempt costs are

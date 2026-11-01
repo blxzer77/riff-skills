@@ -4,43 +4,50 @@
     {
       "id": 1,
       "name": "auth-regression",
-      "prompt": "Review review.patch and the supplied post-change src/ and tests/ for a change to request authorization and caching. Do not edit files or post comments. Report only validated findings with file:line, impact, evidence, fix, severity, and confidence; include tests run and an explicit no-findings result if appropriate.",
-      "expected_output": "A scoped, evidence-based review that traces authorization and cache behavior, reports only change-introduced actionable defects at confidence at least 80%, and does not modify files.",
+      "prompt": "can you review the pending change in review.patch before i merge it? don't change anything",
+      "expected_output": "Reports one important finding at src/gateway.py lines 25-30: the cache lookup now runs before the authorization check and the cache key no longer includes the actor, so any caller, including anonymous ones, receives another user's cached private profile. Does not report the quote normalization, which matches the project rule. Leaves the tree unchanged.",
       "files": ["evals/files/auth-regression"],
       "assertions": [
-        "Establishes the changed-file and base scope before conclusions.",
-        "Traces authorization and cache behavior and identifies only change-introduced actionable defects.",
-        "Reports each finding with file:line, impact, evidence, fix, severity, and confidence of at least 80%.",
-        {"text": "The supplied review fixture is unchanged", "script": "evals/checks/review_unchanged.py"},
-        "Does not claim checks were run without evidence."
+        {"id": "reports-auth-bypass", "text": "A finding is reported at src/gateway.py lines 25-30", "script": "evals/checks/finding_reported.py", "args": ["src/gateway.py", "25", "30"]},
+        {"id": "no-quote-nit", "text": "The quote change at src/gateway.py line 23 is not reported", "script": "evals/checks/finding_absent.py", "args": ["src/gateway.py", "23", "23"]},
+        {"id": "trigger-named", "text": "The authorization finding names a concrete trigger: a different or anonymous caller requesting a profile that another request already cached"},
+        {"id": "tree-unchanged", "text": "The supplied review fixture is unchanged", "script": "evals/checks/review_unchanged.py"}
       ]
     },
     {
       "id": 2,
-      "name": "migration-tests",
-      "prompt": "Review review.patch, migrations/0042_order_status.sql, and tests/test_order_status.py before merge. Focus on behavioral coverage and data-integrity risk, especially rollback, partial failure, old clients, and boundary data. Do not implement fixes.",
-      "expected_output": "A test review weighted toward data-integrity criticality, with concrete findings only where the diff creates reachable risk.",
-      "files": ["evals/files/migration-tests"],
+      "name": "ssrf-host-vs-path",
+      "prompt": "Security review please: review.patch adds two outbound HTTP helpers to our chat backend. Is it safe to ship?",
+      "expected_output": "Reports server-side request forgery in fetch_preview (src/previews.py lines 8-12): a logged-in user controls the full URL, so the server can be made to request internal services or the metadata endpoint. Does not report fetch_status, where the user controls only an escaped path segment on a fixed internal host.",
+      "files": ["evals/files/ssrf-host-vs-path"],
       "assertions": [
-        "Evaluates test coverage by the criticality of data integrity and migration behavior.",
-        "Checks rollback, partial failure, compatibility, and boundary behavior rather than line coverage alone.",
-        "Suppresses pre-existing or speculative concerns and validates findings against the diff.",
-        "Provides concise evidence-based output and states review limitations.",
-        {"text": "The supplied review fixture is unchanged", "script": "evals/checks/review_unchanged.py"}
+        {"id": "reports-host-ssrf", "text": "A finding is reported at src/previews.py lines 8-12", "script": "evals/checks/finding_reported.py", "args": ["src/previews.py", "8", "12"]},
+        {"id": "no-path-ssrf", "text": "No finding is reported at src/previews.py lines 15-19", "script": "evals/checks/finding_absent.py", "args": ["src/previews.py", "15", "19"]},
+        {"id": "tree-unchanged", "text": "The supplied review fixture is unchanged", "script": "evals/checks/review_unchanged.py"}
       ]
     },
     {
       "id": 3,
-      "name": "security-false-positive",
-      "prompt": "Review review.patch, src/webhook.py, and tests/test_webhook.py. Check security and reliability, but distinguish reachable vulnerabilities from trusted-boundary controls and test-only fixtures. Do not make changes.",
-      "expected_output": "A security-aware review that names attacker capability, entry point, asset, violated control, exploit path, and impact, while suppressing theoretical or unreachable concerns.",
-      "files": ["evals/files/security-false-positive"],
+      "name": "sound-change",
+      "prompt": "review.patch adds a discount option to invoice_total. quick review before merge?",
+      "expected_output": "Reports no findings and states clearly that the change has no issues. The change is correct: the discount must be an integer from 0 to 100, it is applied once to the subtotal with half-up rounding to cents, and the default keeps the old behavior. Missing tests for the discount and the 'security reviewed' comment are not findings.",
+      "files": ["evals/files/sound-change"],
       "assertions": [
-        "Identifies actor, entry point, asset, trust boundary, violated control, and plausible impact for any security finding.",
-        "Avoids reporting a dangerous-looking API or theoretical attack without a reachable exploit path.",
-        "Explicitly evaluates the configured timeout and discusses whether missing retry or error propagation is in scope, without inventing unrelated findings.",
-        "Reports the parser/client URL interpretation mismatch as a reachable SSRF risk with a concrete crafted URL.",
-        {"text": "The supplied review fixture is unchanged", "script": "evals/checks/review_unchanged.py"}
+        {"id": "no-findings", "text": "The response reports no findings at a file:line location", "script": "evals/checks/no_findings.py"},
+        {"id": "clear-verdict", "text": "The response gives an explicit verdict that no issues were found, rather than ending without a conclusion"},
+        {"id": "tree-unchanged", "text": "The supplied review fixture is unchanged", "script": "evals/checks/review_unchanged.py"}
+      ]
+    },
+    {
+      "id": 4,
+      "name": "pre-existing-bug",
+      "prompt": "Please review the change in review.patch for the audit-log pagination.",
+      "expected_output": "Reports page_slice (src/paging.py lines 9-12) as an important finding: pages are zero-based, so page 0 computes start = -size and returns an empty or wrong slice. Lists page_count (line 6) as pre-existing, because its floor division drops a partial last page but the diff does not change it.",
+      "files": ["evals/files/pre-existing-bug"],
+      "assertions": [
+        {"id": "reports-new-bug", "text": "A finding is reported at src/paging.py lines 9-12", "script": "evals/checks/finding_reported.py", "args": ["src/paging.py", "9", "12"]},
+        {"id": "preexisting-separate", "text": "src/paging.py line 4-6 is listed as pre-existing and not as a finding", "script": "evals/checks/preexisting_marked.py", "args": ["src/paging.py", "4", "6"]},
+        {"id": "tree-unchanged", "text": "The supplied review fixture is unchanged", "script": "evals/checks/review_unchanged.py"}
       ]
     }
   ]

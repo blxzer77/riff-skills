@@ -1,22 +1,102 @@
 [
-  {"query":"Review this pull request for bugs before merge.","should_trigger":true,"set":"train"},
-  {"query":"Can you inspect this patch for regressions?","should_trigger":true,"set":"train"},
-  {"query":"Find security issues in these changed files.","should_trigger":true,"set":"train"},
-  {"query":"Does this diff have adequate behavioral tests?","should_trigger":true,"set":"train"},
-  {"query":"Review the migration for data-integrity problems.","should_trigger":true,"set":"train"},
-  {"query":"Look for silent failures and swallowed errors in the change.","should_trigger":true,"set":"train"},
-  {"query":"Check this pre-merge change for authorization bugs.","should_trigger":true,"set":"train"},
-  {"query":"Please review the proposed code and report actionable findings only.","should_trigger":true,"set":"train"},
-  {"query":"Assess whether this patch breaks compatibility with old clients.","should_trigger":true,"set":"train"},
-  {"query":"Review this diff, but do not modify the repository.","should_trigger":true,"set":"validation"},
-  {"query":"Write a new module that handles retries.","should_trigger":false,"set":"train"},
-  {"query":"Fix the failing unit tests in this repository.","should_trigger":false,"set":"train"},
-  {"query":"Explain what this function does.","should_trigger":false,"set":"train"},
-  {"query":"Design an API for uploading documents.","should_trigger":false,"set":"train"},
-  {"query":"Refactor this class to make it simpler.","should_trigger":false,"set":"train"},
-  {"query":"Write tests for the parser from scratch.","should_trigger":false,"set":"train"},
-  {"query":"Create a release checklist for the team.","should_trigger":false,"set":"validation"},
-  {"query":"Document the architecture of this service.","should_trigger":false,"set":"validation"},
-  {"query":"Choose a database for this application.","should_trigger":false,"set":"validation"},
-  {"query":"Implement the security fix you described.","should_trigger":false,"set":"validation"}
+  {
+    "query": "can you look over my branch before I open the PR? it's the feature/refunds branch, mostly changes in billing/refund.py and the webhook handler",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "review PR #482 — it reworks how we cache user sessions in redis. I'm worried about stale data",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "here's a diff from a contractor, is this safe to merge? they touched the file upload endpoint",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "git diff main...HEAD is pretty big, anything in there that will break prod?",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "Before I merge: does the change in src/auth/middleware.ts introduce any way to skip the permission check?",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "sanity check my staged changes pls, I refactored the pagination helpers and want to know if I broke anything",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "Look at this patch to the SQL report builder and tell me if there's an injection risk",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "my teammate's PR changes the retry logic in the payment client. review it like a senior engineer would, only real problems",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "Security review the last three commits on this branch — they add an endpoint that fetches remote images",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "does this migration diff lose data if it runs on the existing orders table? review before deploy",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "fix the bug in billing/refund.py where partial refunds round to the wrong cent",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "write unit tests for the pagination helpers in src/paging.py, they have no coverage",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "refactor src/auth/middleware.ts to be easier to read, it's a mess of nested ifs",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "audit the whole repository for security vulnerabilities, not just a change — I want a full scan of every service",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "explain what the diff in this commit does, I'm new to the codebase and want to understand it",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "review our architecture proposal in docs/rfc/0012-event-bus.md before we start building it",
+    "should_trigger": false,
+    "set": "validation"
+  },
+  {
+    "query": "set up a GitHub Action that runs our linter and tests on every pull request",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "resolve the merge conflicts in this branch against main",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "write a PR description for my changes on the feature/refunds branch",
+    "should_trigger": false,
+    "set": "train"
+  },
+  {
+    "query": "address the review comments my teammate left on PR #482 and push the fixes",
+    "should_trigger": false,
+    "set": "train"
+  }
 ]

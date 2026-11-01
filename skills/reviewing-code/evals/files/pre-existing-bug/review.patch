@@ -1,0 +1,14 @@
+diff --git a/src/paging.py b/src/paging.py
+index 5e0d7a1..b81c442 100644
+--- a/src/paging.py
++++ b/src/paging.py
+@@ -4,3 +4,9 @@
+ def page_count(total: int, size: int) -> int:
+     """Number of pages needed to show `total` items, `size` per page."""
+     return total // size
++
++
++def page_slice(items: list, page: int, size: int) -> list:
++    """Items on zero-based `page`."""
++    start = (page - 1) * size
++    return items[start:start + size]

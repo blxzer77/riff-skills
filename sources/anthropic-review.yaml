@@ -1,0 +1,43 @@
+# Curation map: Anthropic / Claude Code published review designs -> riff-skills
+#
+# Upstream text is source material only. Principles are rewritten in this
+# repository's own words, client-specific tools and commands are dropped, and
+# each skill's references/sources.md cites the files it adapts.
+
+upstream:
+  - repo: https://github.com/anthropics/claude-plugins-official
+    commit: a7ba5b93db0c7c8d17f3f1d25853adca79598a1a
+    files:
+      - plugins/code-review/commands/code-review.md
+      - plugins/code-review/README.md
+      - plugins/claude-security/agents/scan-verifier.md
+      - plugins/claude-security/skills/claude-security/role.md
+      - plugins/pr-review-toolkit/agents/code-reviewer.md
+      - plugins/pr-review-toolkit/agents/pr-test-analyzer.md
+      - plugins/pr-review-toolkit/agents/silent-failure-hunter.md
+      - plugins/pr-review-toolkit/commands/review-pr.md
+  - repo: https://github.com/anthropics/claude-code-security-review
+    commit: 0c6a49f1fa56a1d472575da86a94dbc1edb78eda
+    files:
+      - .claude/commands/security-review.md
+      - claudecode/findings_filter.py
+      - claudecode/prompts.py
+  - docs: https://code.claude.com/docs/en/code-review
+    fetched: "2026-10-31"
+  - docs: https://code.claude.com/docs/en/best-practices
+    fetched: "2026-10-31"
+
+skills:
+  reviewing-code:
+    - high-signal-only reporting and the code-review false-positive list
+    - refute-first verification per candidate, pre-existing classification
+    - security hard exclusions and precedents
+    - find, verify, rank, report stages; report-only by default
+
+cut:
+  - item: posting inline comments, committable suggestions, and PR status checks
+    reason: client- and platform-specific; the skill reports and leaves posting to the user
+  - item: model tiers per agent (haiku / sonnet / opus)
+    reason: vendor-specific; the skill describes independent passes without naming models
+  - item: confidence scale 0/25/50/75/100 from the code-review README
+    reason: the executed command file uses no scale; the skill keeps the 80 threshold only

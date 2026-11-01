@@ -120,7 +120,8 @@ e519d0dd4d16be63b956fd35ab52fd6644840328
 
 - 已按官方规范和最佳实践完成内容审查，并修正无条件规则、评测断言、review fixture 和测试 references。
 - 已提交 treatment-aware harness：`ef6c8c5`。它区分 routing、treated body effect、baseline 和 infrastructure failure。
-- treatment-aware 结果显示：`designing-apis`、`writing-adrs`、`writing-tests`、`authoring-skills` 在关键 case 上有增益；`building-llm-applications`、`selecting-technologies`、`designing-modules` 当前 case 为 pass-both；`reviewing-code` 当前 case 没有增益；`reviewing-designs` 未 treated。
+- treatment-aware 结果显示：`designing-apis`、`writing-adrs`、`writing-tests`、`authoring-skills`、`reviewing-code` 在关键 case 上有增益；`building-llm-applications`、`selecting-technologies`、`designing-modules` 当前 case 为 pass-both；`reviewing-designs` 未 treated。
+- `reviewing-code` 已按 Anthropic / Claude Code 官方审查设计重写（来源和 SHA 见 `skills/reviewing-code/references/sources.md`），eval 改为“真缺陷 + 官方 false-positive 诱饵”的配对 case 和机械检查；两轮独立复测均为约 0.85 vs 0.65。之前的“无增益”结论来自评测风格偏好的坏断言，已作废。
 - 这些结论仍是每个 case 三次运行的方向性证据，不能泛化为 skill 的全部能力；详细结果和成本见 `docs/EVALUATION_RESULTS.md`。
 - 不再根据旧的、未区分 treatment 的 benchmark 删除 skill；先换成真正能区分 baseline 的 case，再做移除决定。
 
@@ -134,13 +135,14 @@ e519d0dd4d16be63b956fd35ab52fd6644840328
    ```
 
 2. 阅读本文件和 `docs/EVALUATION_RESULTS.md`，再阅读 `skills/evaluating-skills/SKILL.md`。
-3. 不再为 pass-both case 堆正文规则；先为 `building-llm-applications`、`designing-modules`、`selecting-technologies` 设计真正 baseline 会失败的隐式/边界 fixture，再复测。
-4. 为 `reviewing-designs` 先优化 trigger description；没有 treated run 时不评价正文质量。
-5. 对 `reviewing-code` 检查其 security assertion 是否仍过宽；当前 treatment-aware 结果不支持继续维护其现有复杂规则。
-6. 如果新 fixture 仍无法产生稳定 skill-only 增益（同时考虑成本和严重风险），将 skill 标记为候选移除或合并，而不是继续加规则。
-7. 评测新 skill 前先跑静态检查，并确保 fixture、机械断言和 output eval 能区分 with/without；遇到 timeout 或 rate limit 时排除运行，不修改 skill。
-8. 如果安装到个人项目，优先复制对应的 `assets/agents-snippet.md` 到项目自己的 agent instruction file；skill 只在加载时生效，不能单独保证每次都触发。
-9. 不做 Pi、Codex、Nyan 或跨 agent/model 对比；如果以后改变评测政策，再单独更新本文件和评测结果说明。
+3. 其余 skill 按 `reviewing-code` 的方法重做：先找 Anthropic / Claude Code 团队对应的官方材料并钉住版本，再对照重写正文；eval 用“必须做到 + 不能做的诱饵”配对 case，判定优先机械检查，check 先做 good / near-miss / empty 三态校验。
+4. 优先 `building-llm-applications`、`designing-modules`、`selecting-technologies`：当前 case 为 pass-both，先设计 baseline 会失败的隐式/边界 fixture，再复测。
+5. 为 `reviewing-designs` 先优化 trigger description；没有 treated run 时不评价正文质量。
+6. 改 skill 正文后用 `--baseline old_skill` 对比上一版；没有证明增量的改动如实标注，不要把方差当成效果。
+7. 如果新 fixture 仍无法产生稳定 skill-only 增益（同时考虑成本和严重风险），将 skill 标记为候选移除或合并，而不是继续加规则。
+8. 评测新 skill 前先跑静态检查，并确保 fixture、机械断言和 output eval 能区分 with/without；遇到 timeout 或 rate limit 时排除运行，不修改 skill。
+9. 如果安装到个人项目，优先复制对应的 `assets/agents-snippet.md` 到项目自己的 agent instruction file；skill 只在加载时生效，不能单独保证每次都触发。
+10. 不做 Pi、Codex、Nyan 或跨 agent/model 对比；如果以后改变评测政策，再单独更新本文件和评测结果说明。
 
 ## 不要做的事
 

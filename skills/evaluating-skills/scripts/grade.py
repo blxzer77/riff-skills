@@ -44,6 +44,11 @@ def run_script(spec: dict, skill_dir: Path, run_dir: Path, fixture: Path) -> dic
     else:
         return {"id": spec["id"], "text": spec["text"], "passed": False, "method": "script",
                 "evidence": f"script is not executable and has no known interpreter: {script.name}"}
+    extra = spec.get("args") or []
+    if not isinstance(extra, list) or not all(isinstance(a, (str, int)) for a in extra):
+        return {"id": spec["id"], "text": spec["text"], "passed": False, "method": "script",
+                "evidence": f"assertion args must be a list of strings: {extra!r}"}
+    argv = argv + [str(a) for a in extra]
     outputs = run_dir / "outputs"
     env = dict(os.environ, EVAL_WORKDIR=str(outputs / "workdir"), EVAL_FIXTURE=str(fixture),
                EVAL_RESPONSE=str(outputs / "response.md"))

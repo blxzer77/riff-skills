@@ -1,6 +1,10 @@
-# Authorization and cache review fixture
+# profile-gateway
 
-`review.patch` is the proposed change. The files under `src/` and `tests/` are the
-post-change tree. The endpoint returns private profiles and the existing contract
-requires an unauthorized request to receive 403 before profile data is read or
-returned. The supplied test covers only the owner path.
+Serves user profiles over HTTP. Profiles contain private contact details. The cache is
+shared by every request handled by the process.
+
+`review.patch` is the pending change; the files under `src/` and `tests/` are the
+tree with the change applied. Run tests with `python3 -m unittest`.
+
+PR description: "Move the cache lookup earlier so cached profiles skip the auth
+call, and simplify the cache key. Also normalize quotes."
