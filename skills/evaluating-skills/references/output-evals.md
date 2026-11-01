@@ -71,7 +71,17 @@ Write them after reading the first outputs, while the next runs execute.
   a bug was reproduced, run the agent's tests against the original fixture.
 - Check every check before trusting it: run it on the untouched fixture (must
   fail), on a hand-written good solution (must pass), and on a near-miss bad one
-  (must fail).
+  (must fail). Include at least one good solution written differently from yours:
+  a check must not depend on names, formats, or structure the prompt did not
+  specify, or it fails correct work. Read such details from the artifact (a tool's
+  schema, a function's signature) instead of assuming them.
+- Do not let the prompt name the behavior under test. "Add a refund tool; don't let
+  the model decide authorization" measures instruction-following, which the
+  baseline also has. Ask for the feature and check whether the skill's practice
+  shows up unprompted.
+- When a check or fixture turns out to be wrong, fix it and re-grade every run of
+  both configurations on the same artifacts; do not re-run only the cases that
+  looked bad.
 - Give every assertion a stable unique `id`; one assertion measures one observable
   outcome. Process assertions ("ran the test and saw it fail before editing the code")
   are graded from structured/tool-call evidence, not from the response's claims.

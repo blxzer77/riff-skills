@@ -38,7 +38,11 @@ def run_query(query: str, skill_dir: Path, name: str, adapter, model, timeout, r
                        on_line=stop_when_known if adapter.streams_events else None)
         result = adapter.parse(proc.stdout, workdir)
         adapter.uninstall(workdir)
-    triggered = name in result.read_skill
+    # Routing is judged by the agent's own skill-invocation signal when it has one.
+    # In an empty sandbox the installed skill is the only file in sight, so agents
+    # open it while exploring; counting that read would score every query as a hit.
+    loaded = result.invoked_skill if adapter.native_invocation else result.read_skill
+    triggered = name in loaded
     # A run that errored before the agent decided anything is no evidence either way.
     failed = not triggered and not proc.stopped_early and (
         proc.timed_out or proc.exit_code != 0 or result.error is not None)

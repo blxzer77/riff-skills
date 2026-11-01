@@ -43,6 +43,10 @@ class RunResult:
     # Set when the agent ended in an error state (API failure, rate limit) even if it
     # exited 0. Such runs say nothing about the skill and are retried, not graded.
     error: str | None = None
+    # Skills loaded through the agent's own skill-invocation mechanism, when it has
+    # one. Unlike `read_skill`, this excludes an agent opening SKILL.md as an ordinary
+    # file, which happens when the workspace is empty and the skill is all it can see.
+    invoked_skill: set[str] = field(default_factory=set)
 
 
 @dataclass
@@ -57,6 +61,43 @@ class Process:
 
 def skill_names_in(text: str) -> set[str]:
     return set(_SKILL_PATH.findall(text))
+
+
+# A skill counts as loaded only when the agent reads its SKILL.md. Listing or
+# searching a directory that happens to contain one (ls, find, glob, grep) is not
+# a load: an agent exploring an empty workspace would otherwise "trigger" every
+# installed skill.
+_READ_TOOLS = {"read", "read_file", "readfile", "view", "open", "cat", "notebookread"}
+_SEARCH_TOOLS = {"glob", "grep", "ls", "list", "list_dir", "list_directory", "search",
+                 "find", "find_files"}
+_SHELL_TOOLS = {"bash", "shell", "sh", "exec", "command", "run", "terminal",
+                "command_execution"}
+_READ_COMMAND = re.compile(
+    r"(?:^|[;&|(`]\s*|\$\(\s*|\bsudo\s+)"
+    r"(?:cat|head|tail|less|more|bat|batcat|sed|awk|nl|type|get-content|gc)\b[^;&|]*?"
+    r"(?:^|[/\\\s\"'`=])([^/\\\s\"'`=;&|]+)[/\\]SKILL\.md",
+    re.IGNORECASE,
+)
+
+
+def skill_loads(tool: str, args) -> set[str]:
+    """Skill names whose SKILL.md this one tool call reads."""
+    name = (tool or "").rsplit("__", 1)[-1].rsplit(".", 1)[-1].lower()
+    if name in _SEARCH_TOOLS:
+        return set()
+    if isinstance(args, dict):
+        if name in _READ_TOOLS:
+            path = " ".join(str(args.get(k, "")) for k in
+                            ("file_path", "path", "filePath", "filename", "file", "notebook_path"))
+            return skill_names_in(path)
+        command = args.get("command") or args.get("cmd") or args.get("script")
+        if isinstance(command, list):
+            command = " ".join(map(str, command))
+    else:
+        command = args
+    if isinstance(command, str) and (name in _SHELL_TOOLS or not name):
+        return set(_READ_COMMAND.findall(command))
+    return set()
 
 
 def execute(argv, stdin_text, cwd, timeout, env=None, on_line=None) -> Process:
@@ -126,6 +167,9 @@ class Adapter:
     verified = False
     skills_subdir = ".agents/skills"
     streams_events = False
+    # True when the agent has a dedicated skill-invocation tool, so routing can be
+    # measured from `invoked_skill` rather than from file reads.
+    native_invocation = False
 
     def __init__(self, bin: str | None = None, home: str | None = None):
         self.bin = bin
@@ -276,14 +320,14 @@ class PiAdapter(Adapter):
             return set()
         if event.get("type") != "tool_execution_start":
             return set()
-        return skill_names_in(json.dumps(event.get("args", {})))
+        return skill_loads(event.get("toolName", ""), event.get("args", {}))
 
     def parse(self, stdout, workdir):
         text, tokens, seen_usage, read, error = "", 0, False, set(), None
         for event in _json_lines(stdout):
             kind = event.get("type")
             if kind == "tool_execution_start":
-                read |= skill_names_in(json.dumps(event.get("args", {})))
+                read |= skill_loads(event.get("toolName", ""), event.get("args", {}))
             elif kind == "turn_end":
                 message = event.get("message") or {}
                 usage = message.get("usage") or {}
@@ -330,6 +374,7 @@ class ClaudeCodeAdapter(Adapter):
     name = "claude-code"
     verified = True
     skills_subdir = ".claude/skills"
+    native_invocation = True  # the `Skill` tool
     _base = ["-p", "--output-format", "json", "--setting-sources", "project",
              "--strict-mcp-config"]
 
@@ -395,7 +440,7 @@ class ClaudeCodeAdapter(Adapter):
         if path is None:
             return RunResult(response, tokens, stdout.splitlines(), set(), error)
         lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
-        read = set()
+        read, invoked = set(), set()
         for entry in _json_lines("\n".join(lines)):
             content = (entry.get("message") or {}).get("content")
             if not isinstance(content, list):
@@ -405,11 +450,13 @@ class ClaudeCodeAdapter(Adapter):
                     continue
                 payload = block.get("input") or {}
                 if block.get("name") == "Skill" and isinstance(payload.get("skill"), str):
-                    read.add(payload["skill"].split(":")[-1])
+                    skill = payload["skill"].split(":")[-1]
+                    read.add(skill)
+                    invoked.add(skill)
                 else:
-                    read |= skill_names_in(json.dumps(payload))
+                    read |= skill_loads(block.get("name", ""), payload)
         self._remove_session(path, Path(workdir))
-        return RunResult(response, tokens, lines, read, error)
+        return RunResult(response, tokens, lines, read, error, invoked)
 
     def tool_log(self, transcript_lines):
         calls, steps = {}, []
@@ -468,7 +515,7 @@ class CodexAdapter(Adapter):
     def _item_reads(event) -> set[str]:
         item = event.get("item") or {}
         if item.get("type") == "command_execution":
-            return skill_names_in(str(item.get("command", "")))
+            return skill_loads("command_execution", str(item.get("command", "")))
         return set()
 
     def detect_line(self, line):

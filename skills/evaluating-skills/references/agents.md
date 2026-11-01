@@ -10,9 +10,19 @@ The eval scripts drive agents through the repository's adapter layer. Pick one w
 | Adapter | Status | Skill installed at | Trigger detected when | Isolation |
 |---|---|---|---|---|
 | `pi` | Verified | `<workdir>/.riff-skill/<name>/`, passed with `--skill` | a `read` tool call opens `<name>/SKILL.md` | `--no-skills --no-context-files --no-extensions --no-prompt-templates --no-session` |
-| `claude-code` | Verified (with a Claude Code-compatible binary) | `<workdir>/.claude/skills/<name>/` | the session transcript has a `Skill` call for `<name>` or a `Read` of `<name>/SKILL.md` | `--setting-sources project --strict-mcp-config` |
-| `codex` | **Unverified** (written from the Codex CLI docs) | `<workdir>/.agents/skills/<name>/` | a `command_execution` item mentions `<name>/SKILL.md` | `exec --ephemeral --skip-git-repo-check --sandbox workspace-write` |
+| `claude-code` | Verified (with a Claude Code-compatible binary) | `<workdir>/.claude/skills/<name>/` | trigger evals: a `Skill` call for `<name>`; output evals: that or a read of `<name>/SKILL.md` | `--setting-sources project --strict-mcp-config` |
+| `codex` | **Unverified** (written from the Codex CLI docs) | `<workdir>/.agents/skills/<name>/` | a `command_execution` item reads `<name>/SKILL.md` (cat, head, sed, …) | `exec --ephemeral --skip-git-repo-check --sandbox workspace-write` |
 | `command` | Generic | `--skills-dir` (default `.agents/skills`) | stdout contains `<name>/SKILL.md` | whatever your command does |
+
+Only reading a SKILL.md counts as loading it. Listing or searching a directory that
+contains one (`ls`, `find`, `grep`, glob tools) does not.
+
+Trigger evals use the agent's own skill-invocation signal when it has one. Their
+sandbox is empty, so the installed skill is the only file in sight; agents told to
+"rename this module" or "implement a CSV export" open it while looking for something
+to work on, and counting that read reported 3/3 triggers on unrelated queries. Output
+evals have a real fixture and an explicit task, so a read of SKILL.md there is the
+agent using the skill.
 
 Every run starts in a fresh git repository under `~/.cache/riff-skills/runs/`
 (`--sandbox-root`), with only the skill under test installed and excluded from
