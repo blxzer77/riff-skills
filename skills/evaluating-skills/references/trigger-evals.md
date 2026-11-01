@@ -25,6 +25,12 @@ documented in this skill's references.
 - Make every query substantive. Agents skip skills for one-step tasks they can do
   alone, so a trivial query that fails to trigger tells you nothing about the
   description.
+- Give queries something to act on when the skill needs input. "Review my staged
+  changes" in an empty repository is answered with "nothing to review" before any
+  skill is considered, so it measures the sandbox, not the description. Set a
+  `fixture` on such queries: a directory in the skill with the files, and optionally
+  a `setup.sh` that creates branches or staged changes. Use the same fixture for the
+  near-miss negatives so both labels face the same environment.
 - Assign sets once: `python3 scripts/split_queries.py <file>` (60/40, stratified).
 
 ## Measure

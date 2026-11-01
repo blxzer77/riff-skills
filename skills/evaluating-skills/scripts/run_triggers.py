@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Measure how often a skill's description makes the agent load the skill.
 
-Each query runs `--runs` times in an empty sandbox where only this skill is
-installed. A run counts as triggered when the agent loads the skill's SKILL.md.
-Streaming adapters stop a run as soon as the outcome is known.
+Each query runs `--runs` times in a fresh sandbox where only this skill is
+installed. The sandbox is empty unless the query names a `fixture` directory inside
+the skill; use one when the request only makes sense with something to act on, such
+as a staged change to review. A run counts as triggered when the agent loads the
+skill (see references/agents.md). Streaming adapters stop as soon as that is known.
 
 Example:
     run_triggers.py --skill skills/writing-tests --agent pi --set train
@@ -26,8 +28,9 @@ from common import HarnessError, die, read_frontmatter, read_json, replace_descr
 from sandbox import DEFAULT_ROOT, sandbox
 
 
-def run_query(query: str, skill_dir: Path, name: str, adapter, model, timeout, root):
-    with sandbox(root) as workdir:
+def run_query(query: str, skill_dir: Path, name: str, adapter, model, timeout, root,
+              fixture: Path | None = None):
+    with sandbox(root, fixture) as workdir:
         extra = adapter.install(skill_dir, workdir)
         argv, stdin_text = adapter.command(query, workdir, model, extra)
 
@@ -86,6 +89,13 @@ def main() -> int:
         queries = [q for q in queries if q["set"] == args.set]
     if not queries:
         die(f"no queries in set '{args.set}'")
+    for q in queries:
+        rel = q.get("fixture")
+        if rel is not None:
+            path = (skill_dir / rel).resolve()
+            if skill_dir not in path.parents or not path.is_dir():
+                die(f"query fixture must be a directory inside the skill: {rel!r}")
+            q["_fixture"] = path
 
     description = meta.get("description", "")
     if args.description_file:
@@ -112,7 +122,7 @@ def main() -> int:
         infra_errors = 0
         with ThreadPoolExecutor(max_workers=max(1, args.jobs)) as pool:
             futures = {pool.submit(run_query, q["query"], tested, name, adapter, args.model,
-                                   args.timeout, args.sandbox_root): i
+                                   args.timeout, args.sandbox_root, q.get("_fixture")): i
                        for i, q in enumerate(queries) for _ in range(args.runs)}
             for future in as_completed(futures):
                 i = futures[future]

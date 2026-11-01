@@ -74,6 +74,12 @@ and stderr become the evidence. Use any interpreter via a shebang.
 `set` is `train` or `validation`; keep about 60/40, stratified by `should_trigger`,
 and never move a query between sets once optimization starts.
 
+An optional `fixture` names a directory inside the skill whose contents are copied
+into the trigger sandbox and committed before the query runs. If it contains
+`setup.sh`, that script then runs in the sandbox (to create a branch or staged
+change, for example) and is removed before the agent starts. This is a repository
+extension.
+
 ## Workspace layout
 
 The default workspace is `.workspace/<skill-name>/` under the current directory.
