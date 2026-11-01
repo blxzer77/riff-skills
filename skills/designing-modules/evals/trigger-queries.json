@@ -1,102 +1,122 @@
 [
   {
-    "query": "help me split this codebase into maintainable modules",
+    "query": "every time I touch refunds I end up editing orders and billing too. can you restructure this so refunds can change on its own?",
     "should_trigger": true,
+    "fixture": "evals/files/extract-refunds-implicit",
     "set": "train"
   },
   {
-    "query": "should this monolith become microservices? inspect the repo first",
+    "query": "pull the support desk stuff out into its own package, it's getting big",
     "should_trigger": true,
+    "fixture": "evals/files/extract-refunds-implicit",
     "set": "train"
   },
   {
-    "query": "design boundaries for our growing application without overengineering",
+    "query": "orders imports billing and billing imports orders. untangle them please",
     "should_trigger": true,
+    "fixture": "evals/files/extract-refunds-implicit",
     "set": "validation"
   },
   {
-    "query": "extract billing from the monolith safely",
+    "query": "we're thinking of turning billing into a separate microservice since the codebase keeps growing. good idea?",
     "should_trigger": true,
+    "fixture": "evals/files/extract-refunds-implicit",
     "set": "validation"
   },
   {
-    "query": "organize this feature as a vertical slice",
+    "query": "add a check to CI that fails if one module reaches into another module's internal package",
     "should_trigger": true,
+    "fixture": "evals/files/extract-refunds-implicit",
     "set": "train"
   },
   {
-    "query": "our modules keep importing each other's internals; propose a fix",
+    "query": "this codebase is a tangle, nothing can change without breaking something else in shop/. where should the seams be?",
     "should_trigger": true,
+    "fixture": "evals/files/extract-refunds-implicit",
     "set": "train"
   },
   {
-    "query": "add architecture fitness checks for module boundaries",
+    "query": "move the ledger code from billing into a new accounting module without breaking anything that uses it",
     "should_trigger": true,
+    "fixture": "evals/files/extract-refunds-implicit",
     "set": "train"
   },
   {
-    "query": "plan a strangler migration for this subsystem",
+    "query": "support/ reaches straight into orders and billing. clean up the dependencies between the modules",
     "should_trigger": true,
+    "fixture": "evals/files/extract-refunds-implicit",
     "set": "validation"
   },
   {
-    "query": "use branch by abstraction to replace this implementation",
+    "query": "replace the in-memory order store with a postgres-backed one, gradually, so we can switch back if it goes wrong",
     "should_trigger": true,
+    "fixture": "evals/files/extract-refunds-implicit",
     "set": "validation"
   },
   {
-    "query": "when should we move from a modular monolith to services?",
+    "query": "should refunds be its own module or stay in orders? we're two devs and deploy once a day",
     "should_trigger": true,
+    "fixture": "evals/files/extract-refunds-implicit",
     "set": "train"
   },
   {
-    "query": "teach me the Gang of Four design patterns",
+    "query": "fix the bug where a refund equal to the full order total is rejected",
     "should_trigger": false,
+    "fixture": "evals/files/extract-refunds-implicit",
     "set": "train"
   },
   {
-    "query": "pick a database for my new app",
+    "query": "rename refund_order to issue_refund everywhere",
     "should_trigger": false,
+    "fixture": "evals/files/extract-refunds-implicit",
     "set": "train"
   },
   {
-    "query": "write a generic SOLID principles tutorial",
+    "query": "add type hints to shop/orders/internal/store.py",
     "should_trigger": false,
+    "fixture": "evals/files/extract-refunds-implicit",
     "set": "validation"
   },
   {
-    "query": "debug this null pointer exception",
+    "query": "write tests for the goodwill refund path in support",
     "should_trigger": false,
+    "fixture": "evals/files/extract-refunds-implicit",
     "set": "validation"
   },
   {
-    "query": "make a logo for our product",
+    "query": "design a REST API for creating and listing refunds",
     "should_trigger": false,
+    "fixture": "evals/files/extract-refunds-implicit",
     "set": "validation"
   },
   {
-    "query": "write unit tests for this function",
+    "query": "pick a database for the order store: postgres or sqlite?",
     "should_trigger": false,
+    "fixture": "evals/files/extract-refunds-implicit",
     "set": "validation"
   },
   {
-    "query": "compare cloud providers for hosting",
+    "query": "explain what the support module does, I'm new here",
     "should_trigger": false,
+    "fixture": "evals/files/extract-refunds-implicit",
     "set": "train"
   },
   {
-    "query": "create an API endpoint for invoices",
+    "query": "review my staged changes to orders for bugs before I commit",
     "should_trigger": false,
+    "fixture": "evals/files/extract-refunds-implicit",
     "set": "train"
   },
   {
-    "query": "explain what dependency injection means",
+    "query": "format the whole shop/ package with black and fix the lint warnings",
     "should_trigger": false,
+    "fixture": "evals/files/extract-refunds-implicit",
     "set": "train"
   },
   {
-    "query": "review this pull request for style issues",
+    "query": "add logging to refund_order so we can see who issued each refund",
     "should_trigger": false,
+    "fixture": "evals/files/extract-refunds-implicit",
     "set": "train"
   }
 ]

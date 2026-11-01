@@ -1,92 +1,78 @@
 ---
 name: designing-modules
-description: Designs maintainable module boundaries and chooses an architecture proportionate to a project's size, constraints, and team. Use when splitting a codebase, deciding whether to introduce services, organizing vertical slices, or planning a modularity migration. Not for generic object-oriented design lessons or choosing a technology without examining the repository.
+description: Draws, enforces, and changes module boundaries in an existing codebase, proportionate to its size and team, so features can change without reaching into each other's internals. Use when splitting or extracting a module, moving code between modules, fixing modules that import each other's internals or each other in a cycle, adding boundary checks, or deciding whether to introduce packages or services, even if the user only says the code is tangled or hard to change. Not for object-oriented design lessons, choosing a technology, or designing an HTTP API.
 license: Apache-2.0
 metadata:
-  verified-on: "2026-10-30"
+  verified-on: "2026-11-01"
 ---
 
 # Designing modules
 
-Choose the smallest architecture that makes the next change safer. A module is a
-boundary for ownership, dependencies, tests, and change; it is not merely a directory.
+A module hides a design decision that is likely to change behind an interface that
+reveals as little as possible. That is what lets one part change without the rest
+changing with it. A directory is not a module; a boundary exists only where callers
+are kept from depending on what is behind it.
 
 ## Workflow
 
-- [ ] **Inspect before proposing.** Read the repository map, build/package manifests,
-      entry points, deployment topology, test layout, dependency graph, recent change
-      hotspots, and contributor/ownership signals. Ask for missing constraints: team
-      boundaries, deployment needs, reliability targets, data ownership, and expected
-      growth.
-- [ ] **Name the pressure.** Record the concrete pain (coupled changes, slow tests,
-      unclear ownership, independent scaling, fault isolation, or release
-      coordination) and at least one representative change that currently crosses
-      boundaries. Do not split for aesthetics.
-- [ ] **Choose the scale rung.** Start at the lowest rung that addresses the pressure:
-      single module, modular monolith, or services. Use the ladder in
-      `references/scale-and-boundaries.md` when the choice is disputed.
-- [ ] **Sketch vertical slices.** For each proposed module, identify one end-to-end
-      capability, its public API/events, owned data and invariants, allowed
-      collaborators, and tests. Keep UI/request handling, application behavior, and
-      persistence for a capability together unless a real constraint requires
-      otherwise.
-- [ ] **Set dependency direction.** Make dependencies point toward stable policy and
-      explicit contracts. Reject cycles; keep infrastructure at the edge; expose
-      narrow interfaces rather than internal tables, classes, or utilities. Document
-      intentional exceptions.
-- [ ] **Plan the smallest migration.** Prefer branch by abstraction for an internal
-      replacement and a strangler path for an extracted capability. Include
-      compatibility seams, dual-read/write risks, rollout and rollback, and deletion
-      criteria. Read `references/migration.md`.
-- [ ] **Validate the boundary.** Add boundary tests or fitness checks that fail when
-      forbidden imports, data access, or API coupling returns. Test the highest-risk
-      contract and one real vertical path. Read `references/boundary-validation.md`.
-- [ ] **Stop or revise.** Stop splitting when a boundary has no independent change,
-      ownership, data, deployment, or failure reason; when indirection exceeds the
-      benefit; or when tests show the proposed interface is unstable. Consolidate
-      instead of preserving a bad split.
+- [ ] **Read the existing structure first.** Find how the project already declares
+      boundaries: package public APIs (`__init__` exports, `index` files, `pub`,
+      exported names), `internal` or private directories, boundary-check
+      configuration (import-linter, dependency-cruiser, ArchUnit, Packwerk, module
+      visibility rules), per-directory ownership, and which module owns which data.
+      Follow those conventions; do not introduce a second scheme.
+- [ ] **Name what should change independently.** For a split or extraction, list
+      the decisions likely to change (a pricing rule, a storage format, a provider)
+      and the code that changes together today. Group by what changes together; one
+      module per hidden decision, not one per noun or layer.
+- [ ] **Define the public interface before moving code.** Decide what callers may
+      use, keep everything else private, and give each module sole ownership of its
+      data. Other modules reach that data only through the owner's interface.
+- [ ] **Move incrementally.** Introduce the new interface, switch callers to it,
+      then move the implementation and delete the old path. Keep the build and tests
+      passing at each step. Read `references/migration.md` for a replacement or an
+      extraction that cannot be done in one change.
+- [ ] **Check the boundary mechanically.** Run the project's boundary checks, or add
+      the smallest one that would catch the likely regression (forbidden imports,
+      no cycles, protected internals). Read `references/boundary-checks.md`.
+- [ ] **Stop when the next split has no reason.** A boundary without an
+      independently changing decision, owner, or data only adds indirection.
 
-## Decision rules
+## Choosing the scale
 
-| Evidence | Default | Avoid |
+| Situation | Default | Move up when |
 |---|---|---|
-| Small codebase, one team, one release cadence, low operational pressure | One module with clear internal seams | Service scaffolding and speculative layers |
-| Growing codebase, recurring cross-feature breakage, shared deployment | Modular monolith with enforced boundaries | "Modules" that freely import each other |
-| Genuine independent scaling, ownership, availability, compliance, or release needs | Extract only the capability that has that need | Distributed systems as a substitute for code organization |
-| Boundary is hard to name or requires shared mutable state | Delay extraction; make the seam observable first | Splitting by technical layer or noun alone |
+| Small codebase, one team, one deploy | One deployable with clear internal modules | Unrelated changes keep colliding in the same files |
+| Growing codebase, shared deploy | Modular monolith: modules with public interfaces, owned data, and enforced boundaries | A module needs independent scaling, release cadence, failure isolation, or ownership by another team |
+| A proven independent need | Extract only that capability as a service | — |
 
-A service boundary is justified by an operational or ownership constraint, not by a
-desired diagram. Prefer a synchronous in-process call while the same process and
-release are sufficient; make the contract explicit so extraction remains possible.
-
-## Required design record
-
-Return a short decision record, not a catalog of patterns:
-
-```markdown
-## Module decision
-- Pressure and evidence:
-- Current scale and constraints:
-- Chosen rung:
-- Modules / vertical slices:
-- Public contracts and owned data:
-- Dependency direction and forbidden edges:
-- Boundary checks:
-- Migration and rollback:
-- Stop signals / revisit date:
-```
+Start with a monolith even when you expect it to grow; service boundaries are hard
+to get right early and much harder to move once drawn. Services do not fix a tangled
+codebase: if modules breach each other in one process, they will breach each other
+over the network, at higher cost. Read `references/scale.md` before proposing a new
+service or package.
 
 ## Gotchas
 
-- A folder named `module` is not a boundary. Verify imports, data access, ownership, and tests enforce it.
-- Shared databases erase service ownership. If extraction is not needed yet, say so; if it is, assign ownership and a transition plan before adding a network call.
-- "Reuse" across modules can create a hidden coupling. Prefer a small stable contract; duplicate trivial code when it prevents synchronized changes.
-- A clean dependency graph does not prove a useful boundary. Check whether a normal feature change stays inside one vertical slice.
-- Stop signals are deliverables: record what would trigger consolidation or extraction rather than leaving architecture open-ended.
+- Reaching into another module's internals or tables because it is the quickest way
+  to the data is the most common way boundaries erode. Add or use a public function
+  on the owning module instead, even if it is one line.
+- A shared `utils` or `common` package that several modules import becomes a module
+  everyone depends on and no one owns. Put a helper in the module that owns its
+  concept and export it, or duplicate a few lines.
+- An import cycle means neither module can be understood or changed alone. Break it
+  by moving the shared concept into one side or by inverting the dependency through
+  an interface, not by deferring the import inside a function.
+- Decoupling alone can harden a bad split: if a typical change still edits several
+  modules, the boundary is in the wrong place. Measure by whether code that changes
+  together lives together.
+- Code that moved but is still reached through its old internal path has not been
+  extracted. Update callers to the new public interface and remove the old access.
 
 ## References
 
-- `references/scale-and-boundaries.md` — read when selecting the architecture rung or challenging a proposed split.
-- `references/migration.md` — read when changing an existing boundary or extracting code incrementally.
-- `references/boundary-validation.md` — read when implementing import, contract, ownership, or fitness checks.
-- `assets/agents-snippet.md` — copy when the project wants durable module-boundary guidance in its agent instructions.
+- `references/boundary-checks.md` — read when adding or running a mechanical check on imports, cycles, or data access.
+- `references/migration.md` — read when replacing an implementation or extracting a module across several changes.
+- `references/scale.md` — read before proposing a new package or service.
+- `references/sources.md` — the published sources this skill follows.
+- `assets/agents-snippet.md` — copy into the project's agent instruction file so everyday feature work respects module boundaries.

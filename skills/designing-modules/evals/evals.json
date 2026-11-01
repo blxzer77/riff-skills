@@ -3,35 +3,70 @@
   "evals": [
     {
       "id": 1,
-      "name": "choose-modularity-for-growing-monolith",
-      "prompt": "Our 80k-line app has one team and one deployment, but checkout changes regularly break reporting. Inspect the repository before proposing how to reorganize it. Should we split into services? Give a practical design and migration plan.",
-      "expected_output": "The response asks for or inspects repository evidence, chooses a modular monolith unless operational constraints justify services, proposes vertical slices with owned data and dependency direction, and includes boundary checks and stop signals.",
+      "name": "extract-refunds",
+      "prompt": "Refunds are getting complicated enough that they deserve their own module. Pull the refund logic out of orders into a new shop/refunds module and update whatever uses it. Keep the tests passing.",
+      "expected_output": "Creates shop/refunds with refund_order in its public API, implemented against the orders module's public interface. Callers such as support use shop.refunds. Orders no longer implements or re-exports refunds, so there is no orders<->refunds cycle, and nothing imports another module's internal package.",
+      "files": ["evals/files/extract-refunds"],
       "assertions": [
-        "It does not recommend microservices solely because the codebase is large",
-        "It names a concrete pressure and an incremental migration path",
-        "It includes at least one boundary or fitness check and an explicit stop signal"
+        {"id": "refunds-extracted", "text": "shop.refunds owns refund_order and refund behavior is preserved", "script": "evals/checks/refunds_extracted.py"},
+        {"id": "boundaries-hold", "text": "No module imports another module's internals, modules form no import cycle, and tests pass", "script": "evals/checks/boundaries_hold.py"},
+        {"id": "no-new-shared-module", "text": "No new shared grab-bag module (utils, common, core, ...) was added", "script": "evals/checks/no_new_shared_module.py"}
       ]
     },
     {
       "id": 2,
-      "name": "validate-service-extraction",
-      "prompt": "We want to extract billing from a monolith. Billing and orders currently share six tables and callers reach into billing internals. Design the module boundary and safest extraction sequence.",
-      "expected_output": "The response identifies shared data and internal coupling as blockers, defines ownership and a narrow contract, recommends branch by abstraction or a strangler path with rollout and rollback, and avoids simultaneous writes without reconciliation.",
+      "name": "fix-cycle",
+      "prompt": "lint-imports in CI started failing with 'Modules do not import each other in a cycle' — shop.orders and shop.billing. The app itself works fine. Can you fix it so CI goes green?",
+      "expected_output": "Removes the dependency in one direction, for example by having billing notify orders through a callback or by moving payment-state ownership to one side, so neither module imports the other in a cycle. Does not just move the import inside a function, which leaves the dependency cycle in place.",
+      "files": ["evals/files/fix-cycle"],
       "assertions": [
-        "It treats shared tables as an ownership problem rather than simply adding an API",
-        "It specifies contract, rollout, rollback, and deletion criteria",
-        "It proposes boundary validation for forbidden internals or data access"
+        {"id": "boundaries-hold", "text": "No module imports another module's internals, modules form no import cycle (including imports inside functions), and tests pass", "script": "evals/checks/boundaries_hold.py"},
+        {"id": "no-new-shared-module", "text": "The cycle is not broken by moving both modules' state into a new shared module (utils, common, core, ...)", "script": "evals/checks/no_new_shared_module.py"}
       ]
     },
     {
       "id": 3,
-      "name": "stop-premature-splitting",
-      "prompt": "A small two-person product team asks for 14 microservices so each feature has its own module. The product has one release cadence and no independent scaling needs. Respond with a recommendation and what to do instead.",
-      "expected_output": "The response recommends a single module or modular monolith with explicit vertical seams, explains the operational cost of services, and gives criteria for revisiting the decision.",
+      "name": "shared-formatting",
+      "prompt": "The order confirmation text should also show the order total, formatted the same way invoices format money. Update confirmation_text in orders. Add a test.",
+      "expected_output": "Shows the formatted total in the confirmation by using a function billing exports through its public API, or by a small local helper. Does not import billing's internal money module and does not create a shared utils/common package.",
+      "files": ["evals/files/shared-formatting"],
       "assertions": [
-        "It rejects service-per-feature as premature without operational or ownership evidence",
-        "It proposes a proportionate lower rung and vertical slices",
-        "It states concrete conditions that would justify later extraction"
+        {"id": "no-grab-bag", "text": "No shared grab-bag module was added and the confirmation shows the formatted total", "script": "evals/checks/no_grab_bag.py"},
+        {"id": "boundaries-hold", "text": "No module imports another module's internals, modules form no import cycle, and tests pass", "script": "evals/checks/boundaries_hold.py"}
+      ]
+    },
+    {
+      "id": 4,
+      "name": "extract-refunds-implicit",
+      "prompt": "Refunds are getting complicated enough that they deserve their own module. Pull the refund logic out of orders into a new shop/refunds module and update whatever uses it. Keep the tests passing.",
+      "expected_output": "Same as extract-refunds, but the repository declares no boundary contract and the README says nothing about module rules; the convention is visible only in the code (public __init__ exports, internal/ packages).",
+      "files": ["evals/files/extract-refunds-implicit"],
+      "assertions": [
+        {"id": "refunds-extracted", "text": "shop.refunds owns refund_order and refund behavior is preserved", "script": "evals/checks/refunds_extracted.py"},
+        {"id": "boundaries-hold", "text": "No module imports another module's internals, modules form no import cycle, and tests pass", "script": "evals/checks/boundaries_hold.py"},
+        {"id": "no-new-shared-module", "text": "No new shared grab-bag module (utils, common, core, ...) was added", "script": "evals/checks/no_new_shared_module.py"}
+      ]
+    },
+    {
+      "id": 5,
+      "name": "fix-cycle-implicit",
+      "prompt": "orders and billing import each other and it's getting confusing to follow. Can you untangle them? Keep the tests passing.",
+      "expected_output": "Removes the dependency in one direction so the two modules no longer form an import cycle, without deferring the import inside a function and without moving their state into a new shared module. No boundary contract is declared.",
+      "files": ["evals/files/fix-cycle-implicit"],
+      "assertions": [
+        {"id": "boundaries-hold", "text": "No module imports another module's internals, modules form no import cycle (including imports inside functions), and tests pass", "script": "evals/checks/boundaries_hold.py"},
+        {"id": "no-new-shared-module", "text": "The cycle is not broken by moving both modules' state into a new shared module (utils, common, core, ...)", "script": "evals/checks/no_new_shared_module.py"}
+      ]
+    },
+    {
+      "id": 6,
+      "name": "shared-formatting-implicit",
+      "prompt": "The order confirmation text should also show the order total, formatted the same way invoices format money. Update confirmation_text in orders. Add a test.",
+      "expected_output": "Same as shared-formatting, but with no declared boundary contract: uses a function billing exports publicly or a small local helper, not billing's internal money module and not a new shared package.",
+      "files": ["evals/files/shared-formatting-implicit"],
+      "assertions": [
+        {"id": "no-grab-bag", "text": "No shared grab-bag module was added and the confirmation shows the formatted total", "script": "evals/checks/no_grab_bag.py"},
+        {"id": "boundaries-hold", "text": "No module imports another module's internals, modules form no import cycle, and tests pass", "script": "evals/checks/boundaries_hold.py"}
       ]
     }
   ]

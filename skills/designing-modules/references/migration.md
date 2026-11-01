@@ -1,19 +1,29 @@
 # Incremental migration
 
-Use this reference when a boundary must change without a risky rewrite.
+Verified on 2026-11-01. Adapted from the sources in `sources.md`.
 
-## Branch by abstraction
+Keep the system building and passing its tests at every step. A migration that
+needs a long-lived branch or a big-bang switch is a rewrite in disguise.
 
-For an internal replacement, introduce a narrow abstraction at the existing call site, implement the old path behind it, add contract tests, then add the new path and switch callers incrementally. Measure both paths where behavior or performance can differ. Remove the old implementation and the temporary abstraction after a stable period; otherwise the seam becomes permanent debt.
+## Branch by abstraction (replace an implementation)
 
-## Strangler path
+1. Put an interface in front of the current implementation where callers use it.
+2. Move every caller to the interface, one at a time.
+3. Write the new implementation behind the same interface; switch callers to it
+   gradually, or behind a toggle.
+4. Delete the old implementation once nothing uses it, and remove the interface if
+   it no longer earns its keep.
 
-For an extracted capability, put a routing seam in front of the old implementation, establish the new capability's contract and data ownership, route a small safe slice, compare outcomes, expand gradually, and retire the old path. Avoid simultaneous writes unless reconciliation and rollback are explicit. Prefer one owner for each invariant; temporary duplication needs a time limit and monitoring.
+## Strangler fig (extract or replace a capability)
 
-Every migration plan names: compatibility contract, traffic/data transition, observability, rollout gates, rollback action, owner, and deletion date. A migration that cannot roll back safely should be staged until it can.
+1. Route calls for the capability through one seam you control.
+2. Build the new module behind that seam with its own public interface and data.
+3. Shift traffic or callers over in small, reversible slices, comparing results.
+4. Retire the old path and delete its code; a migration is finished only when the
+   old code is gone.
 
-## Sources
+## Every plan names
 
-- Martin Fowler, “Strangler Fig Application,” martinfowler.com (primary essay), verified 2026-10-30: https://martinfowler.com/bliki/StranglerFigApplication.html
-- Martin Fowler, “Branch by Abstraction,” martinfowler.com (primary essay), verified 2026-10-30: https://martinfowler.com/bliki/BranchByAbstraction.html
-- Sam Newman, *Monolith to Microservices*, O'Reilly, 2019 (incremental extraction), verified 2026-10-30.
+The public interface callers will use, who owns the data during and after the move,
+how each step is rolled back, how you will know the old path is unused, and when it
+will be deleted.

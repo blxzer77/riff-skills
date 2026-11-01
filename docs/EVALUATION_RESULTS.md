@@ -8,6 +8,62 @@
 > Current policy (2026-10-31): run new evaluations only with local cometix and
 > `deepseek-flash`; do not compare these results directly with the historical Pi run.
 
+## `designing-modules` redesign (2026-11-01)
+
+Anthropic and the Claude Code team have published no guidance on module boundaries,
+so this skill follows primary sources instead (Parnas 1972, Fowler, Shopify, Simon
+Brown, and boundary-check tool documentation; see its `references/sources.md`). It
+now leads with Parnas's criterion (hide decisions likely to change), drops the
+vertical-slice default no source mandates, and drops two unverified book citations.
+
+The eval fixture is a small Python project with declared boundaries: each module has
+a public `__init__` and a private `internal/` package. Checks parse every import with
+`ast` (including imports inside functions) and run the tests. Each check was
+validated on two to four hand-written solutions, including correct alternatives such
+as duplicating a helper.
+
+| Case | Boundaries declared (.importlinter + README) | Boundaries only in code |
+|---|---:|---:|
+| extract-refunds | 1.00 / 1.00 | 1.00 / 1.00 |
+| fix-cycle | 1.00 / 0.83, then 1.00 / 1.00 | 1.00 / 1.00 |
+| shared-formatting | 1.00 / 1.00 | 1.00 / 0.67, then 1.00 / 0.50 |
+
+With / without skill, three runs each. The declared versions are pass-both: when the
+contract is written down, the baseline follows it. The value appears when the
+boundary exists only as code convention: asked to reuse billing's money formatter
+from orders, the baseline imported `billing.internal.money` directly in 5 of 6 runs,
+while every with-skill run exported the function through billing's public API. The
+single fix-cycle difference (a baseline that broke the cycle by moving both modules'
+state into a new `shop/core`) did not replicate.
+
+One check gap was found: fix-cycle originally had no grab-bag check, so that
+`shop/core` run passed. A shared-module check was added to fix-cycle and
+extract-refunds, and all runs were re-graded on the same artifacts.
+
+Cost: about +170k tokens per case, excluding one with-skill fix-cycle run that used
+3.8M tokens.
+
+Decision: retain `designing-modules`, with value limited to one well-defined
+behavior: respecting code-level module boundaries that are not documented. Its
+`agents-snippet.md` carries the everyday rule for projects that want it always on.
+
+Trigger evaluation is not measured yet. A new query set was written (20 queries,
+all run against the implicit extract-refunds fixture), but the run was stopped on
+2026-11-02 after the `deepseek-flash` account hit its monthly inference cap: every
+agent call returned HTTP 429 and timed out. No trigger result exists for this
+description. The output runs above finished before the cap (all exit 0, no
+timeouts) and are unaffected.
+
+## `reviewing-code` trigger re-measurement (2026-11-01)
+
+With the native-invocation fix but an empty sandbox, `reviewing-code` scored 12/20:
+asked to review "my staged changes" or "PR #482" in an empty repository, the agent
+ran `git status`, found nothing, and answered before choosing any skill. Trigger
+queries can now name a fixture; with a small repository holding a feature branch and
+a staged change, used for every positive and negative query, it scored 20/20
+(train 12/12, validation 8/8). The description was unchanged across all three
+measurements; only the environment changed.
+
 ## `building-llm-applications` redesign (2026-11-01)
 
 The skill was redesigned from Anthropic's published guidance listed in
@@ -143,7 +199,7 @@ runs per configuration. Results are directional evidence, not statistical proof.
 | `authoring-skills` / decline generic skill | 1.00 | 0.00 | -9.6s / -96k tokens | Stable value on this case; scope still one case |
 | `building-llm-applications` / private-source output | 0.89 | 0.89 | +10.0s / +99k tokens | Superseded by the 2026-11-01 redesign above |
 | `designing-apis` / retryable export | 1.00 | 0.33 | +14.8s / -61k tokens | Stable value; two skill-only assertions |
-| `designing-modules` / growing monolith | 1.00 | 1.00 | +5.1s / +56k tokens | Pass-both; case does not discriminate |
+| `designing-modules` / growing monolith | 1.00 | 1.00 | +5.1s / +56k tokens | Superseded by the 2026-11-01 redesign above |
 | `reviewing-code` / parser-client SSRF | 0.73 | 0.80 | +68.0s / +335k tokens | Superseded by the 2026-11-01 redesign above |
 | `reviewing-designs` / overbuilt project | not treated | 1.00 | — | Description did not load skill; no body conclusion |
 | `selecting-technologies` / small project | 1.00 | 1.00 | +75.1s / +801k tokens | Pass-both; no measured value |

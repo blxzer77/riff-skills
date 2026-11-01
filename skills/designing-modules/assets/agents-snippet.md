@@ -1,6 +1,11 @@
-# Always-on module behavior
+## Module boundaries
 
-- Before splitting code, inspect the repository and name the concrete change or operational pressure the split addresses.
-- Prefer the smallest scale that satisfies current constraints: clear seams first, modular monolith before services.
-- Keep capabilities as vertical slices with owned data, narrow contracts, explicit dependency direction, and boundary checks.
-- For migrations, define rollout, rollback, ownership, and deletion criteria; stop when a boundary has no independent reason to exist.
+- Use another module only through its public interface. Do not import its internal
+  or private code, or read its tables; add a public function on the owning module if
+  you need one.
+- Do not create shared `utils` or `common` packages for convenience; put a helper in
+  the module that owns the concept, or duplicate a few lines.
+- Do not introduce import cycles between modules.
+- Run the project's boundary checks before finishing a change that crosses modules.
+- Prefer a module in the existing deployable over a new package or service unless an
+  independent scaling, release, ownership, or isolation need is stated.
