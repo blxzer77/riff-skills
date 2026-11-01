@@ -1,101 +1,101 @@
 [
   {
-    "query": "Design a RAG assistant over our private docs with citations and an honest no-answer path.",
+    "query": "our support bot keeps making up refund policies that aren't in the docs. it's a python service that calls the model with the user's message, can you fix it?",
     "should_trigger": true,
     "set": "train"
   },
   {
-    "query": "Our agent sometimes calls the refund tool twice. Make the workflow safe and idempotent.",
+    "query": "add a 'summarize this ticket thread' button to the helpdesk — backend is flask, we already have an API key for the model provider in settings.py",
     "should_trigger": true,
     "set": "train"
   },
   {
-    "query": "Build a model-powered invoice extraction feature with JSON validation and evals.",
-    "should_trigger": true,
-    "set": "validation"
-  },
-  {
-    "query": "The LLM is expensive and slow; help me bound context, retries, and tool steps.",
+    "query": "I want to let the agent query our postgres read replica. what should the tool look like? it currently just has a run_sql(query) tool and keeps timing out on huge results",
     "should_trigger": true,
     "set": "validation"
   },
   {
-    "query": "Add human approval before an agent sends a customer a refund.",
-    "should_trigger": true,
-    "set": "train"
-  },
-  {
-    "query": "Our retrieval returns stale documents and the assistant still answers confidently.",
-    "should_trigger": true,
-    "set": "train"
-  },
-  {
-    "query": "Compare a direct call, a workflow, and a multi-agent design for this AI feature.",
-    "should_trigger": true,
-    "set": "train"
-  },
-  {
-    "query": "Create evals for prompt, retrieval, and tool-schema changes.",
+    "query": "We're about to wire our assistant into users' Gmail so it can draft replies. Anything we should worry about before shipping?",
     "should_trigger": true,
     "set": "validation"
   },
   {
-    "query": "Design a provider-neutral model adapter with a rollback path.",
-    "should_trigger": true,
-    "set": "validation"
-  },
-  {
-    "query": "The agent receives malicious instructions in retrieved documents. Fix the boundary.",
+    "query": "the PM wants 'an AI agent' that tags incoming support emails into billing / bug / sales. design it",
     "should_trigger": true,
     "set": "train"
   },
   {
-    "query": "Fix this deterministic parser bug.",
+    "query": "how do I know if my new prompt for the contract-clause extractor is actually better than the old one? right now we eyeball 3 examples",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "our LLM feature costs $9k/month and p95 latency is 14s. it sends the full 40-page policy doc plus chat history every turn. what do we change?",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "build a Q&A assistant over our 25-page employee handbook for the HR slack channel",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "set up langchain + pinecone for searching our product docs, there's about 30 markdown files",
+    "should_trigger": true,
+    "set": "validation"
+  },
+  {
+    "query": "the research agent spawns a dozen sub-agents for every question, even simple ones, and the token bill exploded",
+    "should_trigger": true,
+    "set": "train"
+  },
+  {
+    "query": "bump the openai python SDK from 1.40 to the latest version and fix whatever breaks in the imports",
     "should_trigger": false,
     "set": "train"
   },
   {
-    "query": "Add a normal REST endpoint for listing invoices.",
+    "query": "write a blog post for our engineering blog explaining what retrieval-augmented generation is",
     "should_trigger": false,
     "set": "train"
   },
   {
-    "query": "Explain what JSON schema validation is.",
+    "query": "which provider has the cheapest per-token pricing for a mid-size model right now? just compare the price pages",
     "should_trigger": false,
     "set": "validation"
   },
   {
-    "query": "Write a unit test for this function.",
+    "query": "add rate limiting to our public REST API, 100 requests per minute per key",
     "should_trigger": false,
     "set": "validation"
   },
   {
-    "query": "Update the README with installation steps.",
+    "query": "the CI job that runs our model eval notebook is failing because of a missing pandas dependency, fix the workflow file",
     "should_trigger": false,
     "set": "validation"
   },
   {
-    "query": "Review this ordinary code diff for a null pointer.",
+    "query": "review this PR diff that refactors the invoice PDF renderer for null-pointer bugs",
     "should_trigger": false,
     "set": "validation"
   },
   {
-    "query": "Add a database index for the orders table.",
+    "query": "write unit tests for the date-parsing helper in utils/dates.py",
     "should_trigger": false,
     "set": "train"
   },
   {
-    "query": "Run the existing test suite.",
+    "query": "explain the difference between fine-tuning and prompting in a couple of paragraphs for a non-technical stakeholder",
     "should_trigger": false,
     "set": "train"
   },
   {
-    "query": "Implement a deterministic CSV export.",
+    "query": "our elasticsearch cluster is slow on full-text product search; tune the index mappings",
     "should_trigger": false,
     "set": "train"
   },
   {
-    "query": "Rename this module.",
+    "query": "migrate the user preferences table to add a 'theme' column with a default of 'light'",
     "should_trigger": false,
     "set": "train"
   }

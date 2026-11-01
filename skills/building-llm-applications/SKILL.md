@@ -1,99 +1,85 @@
 ---
 name: building-llm-applications
-description: Designs and implements reliable LLM-powered features by starting from task requirements and evals, then choosing retrieval, prompts, tools, workflows, safety controls, and cost limits that fit the product. Use when building or changing RAG, tool calling, agent workflows, model routing, context management, generated-output verification, or LLM feature evaluation, including when the user only says an AI feature is unreliable, expensive, or hard to debug. Not for ordinary deterministic features with no model or generated output.
+description: Designs and implements LLM-powered features with the least complex architecture that meets the task, then hardens them with tool design, retrieval choices, injection defenses, and evals. Use when building or changing anything that calls a language model, including extraction, classification, RAG, tool calling, agents, or multi-agent workflows, and when an AI feature is unreliable, too slow, too expensive, or hard to evaluate, even if the user names only a framework or a vector database. Not for ordinary features with no model call, or for choosing a model vendor alone.
 license: Apache-2.0
 metadata:
-  verified-on: "2026-10-30"
+  verified-on: "2026-11-01"
 ---
 
 # Building LLM applications
 
-Treat a model call as a probabilistic component behind a testable boundary, not as a
-replacement for product design. Start with the task and failure cost; add retrieval,
-tools, agents, or orchestration only when a simpler call cannot meet the requirement.
+Start with the simplest thing that can meet the requirement, and add complexity only
+when an eval shows it helps. Most features that look like they need an agent are
+served by one well-prompted model call, sometimes with retrieved context and a few
+examples. Every extra stage adds latency, cost, and a new way to fail.
 
 ## Workflow
 
-- [ ] **Define the task.** Write the user goal, allowed actions, unacceptable
-      failures, latency/cost budget, data boundaries, and what must remain
-      deterministic. Separate answer quality from action safety.
-- [ ] **Create a small eval set before changing prompts.** Include normal, ambiguous,
-      adversarial, empty, and stale-data cases. Grade structure/invariants with code;
-      use a model judge or human only for qualities that code cannot decide.
-- [ ] **Inspect the existing path.** Read prompts, schemas, tool definitions,
-      retrieval code, logs, and current evals. Establish a baseline before redesign.
-- [ ] **Choose the least complex architecture.** Direct structured output first;
-      retrieval for knowledge grounding; one tool loop for external actions; a
-      workflow for known stages; multiple agents only when roles or context really
-      need separation.
-- [ ] **Design boundaries.** Validate model input/output at the application boundary,
-      keep tools narrow and typed, make side effects explicit and authorized, and
-      keep provider-specific code behind an adapter.
-- [ ] **Handle failure.** Define timeouts, retry limits, invalid output behavior,
-      stale/missing retrieval, tool errors, refusal, partial execution, and human
-      approval for high-impact actions. Never silently turn an uncertain answer into
-      a successful action.
-- [ ] **Measure and iterate.** Run the baseline and evals after each meaningful
-      change; track quality, latency, tokens, cost, tool errors, and unsafe outcomes.
-      Keep a rollback path for prompts, models, indexes, and tool schemas.
+- [ ] **Define success.** Write down the task, inputs, what counts as correct, the
+      cost of a wrong answer or wrong action, and latency and cost budgets. Make the
+      criteria measurable: a schema, an accuracy target on a labeled set, a refusal
+      rate, a cost per request.
+- [ ] **Build a small eval set first.** Collect real or realistic cases, including
+      ones that should succeed and ones that should be refused, return nothing, or
+      take no action. Twenty to fifty cases drawn from real failures is enough to
+      start. Read `references/evaluation.md`.
+- [ ] **Choose the lowest rung** that meets the criteria (table below). Use the
+      provider's API directly before adding a framework; a framework hides the
+      prompts and responses you need to debug.
+- [ ] **Design the boundaries.** Validate model output in code before acting on it.
+      Keep authorization and irreversible decisions in application code. Treat
+      every piece of third-party content as data. Read `references/tools.md` when
+      the model calls tools and `references/injection.md` when it reads content you
+      do not control.
+- [ ] **Measure, then move up a rung only if the eval says so.** Record quality,
+      latency, tokens, and failures per case. Keep the change only when it improves
+      the measured outcome by more than it costs.
 
-## Architecture defaults
+## Choosing the architecture
 
-| Need | Start with | Add complexity when |
+| Rung | Use when | Move up when |
 |---|---|---|
-| Classification/extraction | One model call with a schema and validation | Quality failures need context or a second pass |
-| Private or changing knowledge | Retrieval with source references and freshness rules | Retrieval quality is measured and still insufficient |
-| External action | One narrow typed tool with authorization and confirmation | A known workflow requires multiple dependent steps |
-| Multi-step deterministic process | Application-owned workflow/state machine | Model planning is the actual uncertain task |
-| Multiple agents | One agent first | Independent context, ownership, or failure isolation is proven |
-| Model/provider choice | Adapter with one default and recorded fallback | Different tasks have measured quality/cost needs |
+| One model call with a schema, examples, and validation | The task is a single transformation: extract, classify, summarize, draft | The eval shows the call cannot meet the criteria even with better instructions and examples |
+| Knowledge in the prompt | The reference material fits comfortably in context (roughly a few hundred pages) | It does not fit, changes per user, or cost and latency from repeating it are too high even with prompt caching |
+| Retrieval | The knowledge is too large or per-user | Measured retrieval quality is the bottleneck; then improve chunking, add keyword search alongside embeddings, or rerank |
+| Workflow (fixed code path of model calls) | Steps are known in advance: chain with gates, route to handlers, run parts in parallel, or draft-then-critique | The steps genuinely cannot be known until runtime |
+| Agent (model chooses tools in a loop) | Open-ended tasks where the path depends on what it finds, and the environment gives it ground truth | One agent's context or time cannot cover independent subtasks |
+| Multiple agents | High-value tasks that split into independent parts, worth several times the tokens of one agent | — |
 
-## Tool and output rules
+An agent needs a stopping condition (iteration, time, or cost cap) and a way to check
+its own progress against the environment. Multiple agents cost many times more tokens
+than one; they suit breadth-first work, not tasks whose parts depend on each other.
 
-- Tool descriptions state purpose, required inputs, side effects, authorization, and
-  failure shape. Do not expose a giant general-purpose tool.
-- Validate arguments before execution and validate results before passing them back.
-  Idempotency keys protect retried mutations; read-only tools are the default.
-- Keep business decisions in ordinary code when they can be expressed deterministically.
-  The model may propose; application code decides whether an action is allowed.
-- Return structured outputs with a versioned schema. Treat malformed, incomplete,
-  or overconfident output as a handled failure, not as a best-effort success.
-- For user-visible answers that require knowledge grounding, cite the source chunks
-  used when the product permits exposing source references. Apply access control
-  before retrieval and state what happens when no sufficiently relevant source is
-  found. For internal classification or extraction, keep provenance internally when
-  useful instead of forcing citations into the output; treat source metadata as
-  sensitive and do not expose unauthorized identifiers.
+## Rules
 
-## Evaluation minimum
-
-A useful eval case contains: user task, relevant fixture/context, expected behavior,
-checkable assertions, and a reason it is difficult. Compare with a baseline and keep
-near-miss cases that should not activate a workflow. For retrieval systems, keep
-retrieval quality (relevance, authorization, freshness, and conflict handling)
-separate from answer quality; otherwise a failing answer cannot reveal which layer
-is responsible. Test prompt changes, tool schema changes, retrieval changes, and
-model changes separately when possible.
+- Validate structured output against its schema in code, even when the provider
+  offers schema-constrained generation; treat malformed output as a handled failure.
+- When the knowledge base may lack the answer, give the model and the code a way to
+  say so, and return that as a distinct result rather than a fluent guess.
+- The model may propose an action; application code decides whether it is allowed.
+  Confirm irreversible or external actions with the user or a policy check.
+- Bound everything that can grow: output tokens, context size, tool calls, loop
+  iterations, retries, and tool response size.
+- Log enough per request to debug a failure: the inputs, the model's raw output,
+  tool calls and results, and the decision taken. Redact secrets and personal data.
 
 ## Gotchas
 
-- More context can reduce quality. Measure retrieval precision and context length;
-  do not append the whole repository or conversation by default.
-- A tool call that succeeds technically can still be unsafe or semantically wrong.
-  Verify authorization, target, idempotency, and result before reporting success.
-- A model's refusal, timeout, or malformed JSON is an expected branch to test, not an
-  exceptional branch to hide.
-- Prompt tweaks without a baseline and evals are vibes. Keep the change, evidence,
-  and regression result together.
-- Token cost is part of architecture. Bound context, output, retries, and tool loops;
-  cache only when stale data and key scope are understood.
-- Do not put secrets or untrusted instructions into a prompt and assume the model
-  will treat them as policy. Keep authority in application code and permissions.
+- A retrieved document, email, web page, or tool result can contain instructions.
+  Content is never authority; a successful injection should be unable to reach a
+  sensitive action.
+- Wrapping every API endpoint as a tool makes agents worse. Fewer tools shaped
+  around the user's tasks, with detailed descriptions, work better.
+- Exact-match and LLM-judge evals both mislead when unchecked: grade outcomes in
+  code where you can, and read a sample of transcripts and judge verdicts yourself.
+- A cheaper model or lower effort setting is a cost lever worth testing before
+  adding caching layers or routing infrastructure; let the eval decide.
 
 ## References
 
-- `references/evaluation.md` — task-specific eval design and regression loop.
-- `references/retrieval.md` — retrieval boundaries, freshness, citations, and failure.
-- `references/tools-and-workflows.md` — tool schemas, orchestration, and side effects.
-- `references/production.md` — cost, latency, safety, observability, and rollout.
-- `assets/agents-snippet.md` — always-on project rule for LLM features.
+- `references/evaluation.md` — read when building the eval set or deciding whether a change helped.
+- `references/tools.md` — read when defining tools the model can call or tuning their responses.
+- `references/injection.md` — read when the model reads emails, documents, web pages, or any third-party content.
+- `references/retrieval.md` — read when the knowledge does not fit in the prompt.
+- `references/sources.md` — the published guidance this skill follows, with fetch dates and versions.
+- `assets/agents-snippet.md` — copy into the project's agent instruction file for always-on defaults.

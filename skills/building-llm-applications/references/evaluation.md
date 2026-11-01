@@ -1,35 +1,48 @@
-# LLM feature evaluation
+# Evaluating an LLM feature
 
-Evaluate the task, not the model's prose in the abstract.
+Verified on 2026-11-01. Adapted from the evaluation guidance in `sources.md`.
 
-## Case shape
+Evals are how you know whether a change helped. Build them before tuning prompts.
 
-Each case records:
+## Cases
 
-- user request and relevant context/fixture;
-- expected behavior and explicit non-goals;
-- assertions that code can check (schema, citations, tool arguments, authorization,
-  refusal, state transition);
-- a human/model-judge criterion only when the quality cannot be coded;
-- risk level and why this case matters.
+- Start with twenty to fifty tasks taken from real failures or real user requests.
+  Early changes have large effects, so a small set is enough to see them.
+- A good case is one where two domain experts would independently reach the same
+  pass/fail verdict. Ambiguous cases add noise, not signal.
+- Balance the set: include cases where the feature should act and where it should
+  decline, return no answer, or do nothing. One-sided sets reward over-eager
+  systems.
+- Include the hard edges: empty or irrelevant context, conflicting sources, malformed
+  input, planted instructions, and the largest realistic input.
 
-Include normal, edge, ambiguous, stale/empty context, prompt-injection-like content,
-malformed tool results, and repeated requests. Keep a held-out set when optimizing
-descriptions or prompts.
+## Grading
 
-## Baseline and iteration
+Prefer, in order: code checks (schema valid, field equals expected, tool not called,
+state changed), then model graders with a rubric, then human review. Grade the
+outcome the system produced rather than the exact steps it took; capable systems
+find valid paths the author did not anticipate.
 
-Run the same cases with the current implementation and the candidate. Capture quality,
-latency, token usage, cost, tool calls, errors, and unsafe outcomes. Change one major
-variable at a time. Remove assertions that pass in both; investigate assertions that
-fail in both. Human review catches omissions assertions did not anticipate.
+For model graders, use one clear rubric per dimension, allow an "unknown" verdict
+when the evidence is missing, and check a sample of verdicts against human judgment
+before trusting the score.
 
-For subjective grading, blind the comparison when possible and require evidence. Do
-not let the judge see which version is expected to win.
+## Running
 
-## Gates
+- Run each case in a fresh context. Shared state between trials inflates scores.
+- Run each case several times. Report how often it passes, and for actions that must
+  never go wrong, whether it passes every time.
+- Read transcripts of failures and of surprising passes; the score says what
+  happened, the transcript says why.
 
-A release gate should include hard failures (invalid schema, unauthorized action,
-missing required citation, leaked secret, wrong tool target) and quality thresholds
-for the task. Averages can hide catastrophic tails: inspect high-risk cases and
-worst-case outcomes separately.
+## Retrieval
+
+Evaluate retrieval separately from the answer: did the right passages come back
+(recall, precision, rank of the first relevant one), and did the answer use them.
+Otherwise a wrong answer cannot tell you which layer to fix.
+
+## Deciding
+
+Compare against the current version on the same cases. Keep a change when it
+improves the measured outcome by more than it adds in cost and latency, and keep
+the cases that guard against regressions in the suite.

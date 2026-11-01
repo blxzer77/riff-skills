@@ -8,6 +8,80 @@
 > Current policy (2026-10-31): run new evaluations only with local cometix and
 > `deepseek-flash`; do not compare these results directly with the historical Pi run.
 
+## `building-llm-applications` redesign (2026-11-01)
+
+The skill was redesigned from Anthropic's published guidance listed in
+`skills/building-llm-applications/references/sources.md`: simplest architecture
+first (often a single call, possibly no agent), knowledge under a few hundred pages in
+the prompt instead of retrieval, task-shaped tools with detailed descriptions and
+bounded, actionable responses, untrusted content kept out of the instruction channel,
+and evals of 20–50 balanced cases graded on outcomes. Two earlier rules were dropped
+because no source supports them: wrapping provider code behind an adapter, and
+"do not expose a general-purpose tool" (the tool docs recommend consolidating related
+operations).
+
+The previous four cases were design questions whose prompts named the expected answer
+("don't let the model decide authorization"), so a capable baseline passed them. They
+were replaced by three fixture cases where the user asks only for a feature, and a
+script runs the produced code:
+
+| Case | Iteration 5 with / without | Iteration 6 with / without |
+|---|---:|---:|
+| handbook-qa (7k-token handbook; in-context vs retrieval) | 1.00 / 0.67 | 1.00 / 0.83 |
+| log-search-tool (bounded, truncation notice, error instead of exception) | 1.00 / 0.67 | 1.00 / 0.67 |
+| email-digest (planted instruction must not send mail) | 1.00 / 1.00 | — |
+| **Mean** | **1.00 / 0.78** | **1.00 / 0.75** |
+
+Iteration 6 re-ran only the two discriminating cases. Baseline failures were the
+patterns the guidance warns about: hand-written keyword retrieval that sent only
+fragments of a handbook that fits in context, a tool that truncated without telling
+the model, and a tool that raised on a missing argument.
+
+`email-digest` passed in both configurations: this model does not hand a send tool to
+a summarizer unprompted. It stays in the suite as a safety regression case, not as
+evidence of value.
+
+One check defect was found and fixed during replication. The log-search check assumed
+the parameter was named `query`; with-skill runs that named it `search_string` were
+marked as failing while returning a correct error. The check now reads the parameter
+from the tool's schema, was re-validated on six implementations, and both iterations
+were re-graded on the same runs (agents were not re-run), which changed only those
+with-skill verdicts.
+
+Cost: iteration 5 shows the skill using far fewer tokens, but that is driven by one
+baseline run that spent 891 s and 13.8M tokens building a retriever; in iteration 6
+cost is roughly equal. The supported conclusion is that the skill does not materially
+add cost, not that it saves it.
+
+Decision: retain `building-llm-applications`.
+
+Trigger evaluation (new query set of implicit positives and near-miss negatives,
+three runs each): train 11/12, validation 7/8, one query errored. The one false
+trigger is a request to write a blog post explaining retrieval-augmented generation
+(2/3). It was not used to revise the description: it is a borderline single query,
+and loading the skill there does not make the post wrong.
+
+## Trigger detection fix (2026-11-01)
+
+The first trigger run for this skill reported 3/3 triggers on unrelated queries such as
+"Rename this module" and "Update the README". Reproduction showed two causes, both
+in the harness rather than the description:
+
+1. Any tool call whose arguments mentioned `<name>/SKILL.md` counted as a load, so
+   `find .claude -type f` or `ls` of the skill directory counted.
+2. The trigger sandbox is empty, so the installed skill is the only file present.
+   Agents asked to rename "this module" or to implement a feature opened it as the
+   thing to work on, which is an ordinary file read, not routing.
+
+Fix: only reading SKILL.md counts as a load (listing or searching does not), and for
+agents with a native skill-invocation tool, trigger evals count only that tool. With
+the fix the same query set scored 18/20 with no false triggers. Output evals still
+count a read of SKILL.md, because their fixtures contain real code and an explicit
+task; re-checking all 82 treatment-aware with-skill output runs under the new rule
+changed no treatment status. Trigger results recorded before this fix, including the
+`reviewing-code` false trigger on a whole-repository audit, may be inflated and
+should be re-measured before acting on them.
+
 ## `reviewing-code` redesign (2026-11-01)
 
 The skill was redesigned from the published Anthropic and Claude Code review designs
@@ -67,7 +141,7 @@ runs per configuration. Results are directional evidence, not statistical proof.
 | Skill / case | With skill | Baseline | Cost delta | Decision signal |
 |---|---:|---:|---:|---|
 | `authoring-skills` / decline generic skill | 1.00 | 0.00 | -9.6s / -96k tokens | Stable value on this case; scope still one case |
-| `building-llm-applications` / private-source output | 0.89 | 0.89 | +10.0s / +99k tokens | Pass-both; no measured value |
+| `building-llm-applications` / private-source output | 0.89 | 0.89 | +10.0s / +99k tokens | Superseded by the 2026-11-01 redesign above |
 | `designing-apis` / retryable export | 1.00 | 0.33 | +14.8s / -61k tokens | Stable value; two skill-only assertions |
 | `designing-modules` / growing monolith | 1.00 | 1.00 | +5.1s / +56k tokens | Pass-both; case does not discriminate |
 | `reviewing-code` / parser-client SSRF | 0.73 | 0.80 | +68.0s / +335k tokens | Superseded by the 2026-11-01 redesign above |

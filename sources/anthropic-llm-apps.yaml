@@ -1,0 +1,43 @@
+# Curation map: Anthropic guidance on building LLM features -> riff-skills
+#
+# Upstream text is source material only. Principles are rewritten in this
+# repository's own words; provider-specific API fields and model names are left
+# out of skill bodies because they change. Engineering posts and docs pages carry
+# no version; they are recorded by fetch date.
+
+upstream:
+  - url: https://www.anthropic.com/engineering/building-effective-agents
+    fetched: "2026-11-01"
+  - url: https://www.anthropic.com/engineering/writing-tools-for-agents
+    fetched: "2026-11-01"
+  - url: https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents
+    fetched: "2026-11-01"
+  - url: https://www.anthropic.com/news/contextual-retrieval
+    fetched: "2026-11-01"
+  - url: https://www.anthropic.com/engineering/multi-agent-research-system
+    fetched: "2026-11-01"
+  - url: https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents
+    fetched: "2026-11-01"
+  - docs: https://platform.claude.com/docs/en/build-with-claude/
+    pages: [define-success, develop-tests, reduce-hallucinations, mitigate-jailbreaks,
+            tool-use, prompt-caching, reduce-latency, choosing-a-model, structured-outputs]
+    fetched: "2026-11-01"
+  - repo: https://github.com/anthropics/claude-cookbooks
+    commit: c43f56d0360b9b1f631bd090fd199231d4c880cc
+    files: [patterns/agents, capabilities/retrieval_augmented_generation]
+
+skills:
+  building-llm-applications:
+    - simplest architecture first; workflow patterns vs agents; stopping conditions
+    - knowledge under ~200k tokens in the prompt; hybrid keyword and embedding retrieval
+    - task-shaped, consolidated tools; detailed descriptions; bounded responses; actionable errors
+    - untrusted content out of the instruction channel; least privilege; screening
+    - 20-50 balanced eval cases; grade outcomes; calibrate model graders
+
+cut:
+  - item: exact retrieval improvement percentages (35%, 49%, 67%)
+    reason: measured on Anthropic's corpora and embedding models; the skill states the direction and says to tune with evals
+  - item: provider API field names (tool_result blocks, strict mode, input_examples, response_format enums)
+    reason: vendor-specific; the skill describes the principle without the field
+  - item: named models for screening or routing
+    reason: time-sensitive and vendor-specific
