@@ -142,8 +142,8 @@ e519d0dd4d16be63b956fd35ab52fd6644840328
 3. 其余 skill 按 `reviewing-code` 的方法重做：先找 Anthropic / Claude Code 团队对应的官方材料并钉住版本，再对照重写正文；eval 用“必须做到 + 不能做的诱饵”配对 case，判定优先机械检查，check 先做 good / near-miss / empty 三态校验。
 4. 额度恢复后先补测 `designing-modules` 的 trigger（查询集已就绪），先用一次最小请求确认 API 不再返回 429。
 5. `selecting-technologies` 已重写，5 个 fixture case 和机械检查已校验（见 `docs/EVALUATION_RESULTS.md`），但还没跑过 agent。额度恢复后先只跑 baseline pilot（`--configs without_skill --runs 2`）确认 case 有区分度；baseline 全过的 case 换掉，再跑配对评测和 trigger。经验：契约写明时 baseline 往往也能做对，skill 的价值常在“约定没写明”的场景里。
-6. `reviewing-designs`、`writing-adrs` 的 trigger 都需要用带真实输入的 fixture 重测（设计文档、待决策的改动），再判断 description 是否有问题；没有 treated run 时不评价正文质量。
-7. 修复前记录的 trigger 结果（`writing-tests`、`writing-adrs` 等）可能失真，采信前先重测。
+6. `reviewing-designs`、`writing-adrs`、`writing-tests` 的 trigger 查询已配好 fixture（查询里点名的设计文档、ADR、源文件都存在），额度恢复后重测，再判断 description 是否有问题；没有 treated run 时不评价正文质量。
+7. 修复前记录的 trigger 结果都可能失真（空 sandbox、`ls` 误判为加载），以重测结果为准。
 8. 改 skill 正文后用 `--baseline old_skill` 对比上一版；没有证明增量的改动如实标注，不要把方差当成效果。
 9. 如果新 fixture 仍无法产生稳定 skill-only 增益（同时考虑成本和严重风险），将 skill 标记为候选移除或合并，而不是继续加规则。
 10. 评测新 skill 前先跑静态检查，并确保 fixture、机械断言和 output eval 能区分 with/without；遇到 timeout 或 rate limit 时排除运行，不修改 skill。
