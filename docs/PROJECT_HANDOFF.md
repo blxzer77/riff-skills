@@ -120,9 +120,13 @@ e519d0dd4d16be63b956fd35ab52fd6644840328
 
 - 已按官方规范和最佳实践完成内容审查，并修正无条件规则、评测断言、review fixture 和测试 references。
 - 已提交 treatment-aware harness：`ef6c8c5`。它区分 routing、treated body effect、baseline 和 infrastructure failure。
-- treatment-aware 结果显示：`designing-apis`、`writing-adrs`、`writing-tests`、`authoring-skills`、`reviewing-code`、`building-llm-applications`、`designing-modules` 在关键 case 上有增益；`selecting-technologies` 旧 case 为 pass-both，已重写并换成新 fixture case，尚未评测；`reviewing-designs` 未 treated。
-- `designing-modules` 改用非 Anthropic 一手资料（Anthropic 没有模块边界方面的指导；来源见其 `references/sources.md`）。增益只集中在一个行为：边界只体现在代码约定、未写成文档时，通过公开 API 访问而不是越界 import internal（baseline 6 次中 5 次越界，with-skill 6/6 正确）。边界写进契约文件时两边都能做对。新 trigger 查询集已写好，但尚未测出结果（见下方额度说明）。
-- 2026-11-02 起 `deepseek-flash` 账户触发月度推理上限（HTTP 429，`monthly Clinepass limit`，约 2026-11-17 重置）。此后启动的运行全部超时，不产生证据；上限前完成的运行有效。恢复前不要启动评测，也不要把超时当成 skill 结论。
+- treatment-aware 结果显示：`designing-apis`、`writing-adrs`、`writing-tests`、`authoring-skills`、`reviewing-code`、`building-llm-applications`、`designing-modules`、`reviewing-designs` 在关键 case 上有增益；`selecting-technologies` 正文增益尚未测出（见下）。
+- 评测模型：2026-11-02 起 `deepseek-flash` 触发月度上限（约 2026-11-17 重置），用户同意改用 `claude-haiku-5-5`。两个模型的结果不可直接比较；`docs/EVALUATION_RESULTS.md` 每节注明模型。
+- sandbox 包装脚本 `~/.cache/riff-skills/bin/cometix-sandboxed` 在登录用户变更后丢失过一次，已重建：只允许在 `~/.cache/riff-skills/runs/*/work` 和 grader 用的 `/tmp/riff-complete-*/work` 下运行。缺失时先重建再跑评测，不要裸跑 cometix。
+- `designing-modules` 改用非 Anthropic 一手资料（Anthropic 没有模块边界方面的指导；来源见其 `references/sources.md`）。增益只集中在一个行为：边界只体现在代码约定、未写成文档时，通过公开 API 访问而不是越界 import internal（deepseek 上 baseline 6 次中 5 次越界，with-skill 6/6 正确）。haiku 上 trigger 18/20，0 误触发。
+- `reviewing-designs` 按 Anthropic 审查设计重写，换成 4 个 fixture case（prompt 不点题）。haiku 上 0.98 vs 0.83：两边都能找出隐藏缺陷，差别在“健全设计给 approve”（with-skill 5/6，baseline 0/6）。成本约 +585k token/次。trigger 18/20。
+- `selecting-technologies` 在 haiku 上：5 个 case baseline 全过（haiku 训练截止晚于这些事实）；case 6（仓库已固定一个 2026-09 弃用的模型）baseline 3/3 沿用，能区分，但 description 的排除条款让 skill 不被加载，正文效果未测。trigger 19/20，description 不改。
+- trigger harness：agent 调用提问工具后在非交互模式下会被中止，这类运行现在计入路由结果，不再当作错误排除。
 - trigger eval 现在支持 `fixture`：需要输入才能工作的 skill（审查代码、审查设计、写 ADR）必须在有真实输入的 sandbox 里测路由。`reviewing-code` 加 fixture 后为 20/20；空仓库下的 12/20 和更早的 16/20 都是环境造成的。
 - `reviewing-code` 已按 Anthropic / Claude Code 官方审查设计重写（来源和 SHA 见 `skills/reviewing-code/references/sources.md`），eval 改为“真缺陷 + 官方 false-positive 诱饵”的配对 case 和机械检查；两轮独立复测均为约 0.85 vs 0.65。之前的“无增益”结论来自评测风格偏好的坏断言，已作废。
 - `building-llm-applications` 已按 Anthropic 官方材料重写（building effective agents、writing tools、contextual retrieval、evals、injection 等，见其 `references/sources.md`）；eval 改为只提需求的 fixture case，由脚本运行产出的代码判定。两轮复测 1.00 vs 0.78 / 0.75，成本基本持平。旧的 4 个 case 在 prompt 里直接写了答案，已删除。
@@ -140,15 +144,14 @@ e519d0dd4d16be63b956fd35ab52fd6644840328
 
 2. 阅读本文件和 `docs/EVALUATION_RESULTS.md`，再阅读 `skills/evaluating-skills/SKILL.md`。
 3. 其余 skill 按 `reviewing-code` 的方法重做：先找 Anthropic / Claude Code 团队对应的官方材料并钉住版本，再对照重写正文；eval 用“必须做到 + 不能做的诱饵”配对 case，判定优先机械检查，check 先做 good / near-miss / empty 三态校验。
-4. 额度恢复后先补测 `designing-modules` 的 trigger（查询集已就绪），先用一次最小请求确认 API 不再返回 429。
-5. `selecting-technologies` 已重写，5 个 fixture case 和机械检查已校验（见 `docs/EVALUATION_RESULTS.md`），但还没跑过 agent。额度恢复后先只跑 baseline pilot（`--configs without_skill --runs 2`）确认 case 有区分度；baseline 全过的 case 换掉，再跑配对评测和 trigger。经验：契约写明时 baseline 往往也能做对，skill 的价值常在“约定没写明”的场景里。
-6. `reviewing-designs`、`writing-adrs`、`writing-tests` 的 trigger 查询已配好 fixture（查询里点名的设计文档、ADR、源文件都存在），额度恢复后重测，再判断 description 是否有问题；没有 treated run 时不评价正文质量。
-7. 修复前记录的 trigger 结果都可能失真（空 sandbox、`ls` 误判为加载），以重测结果为准。
-8. 改 skill 正文后用 `--baseline old_skill` 对比上一版；没有证明增量的改动如实标注，不要把方差当成效果。
-9. 如果新 fixture 仍无法产生稳定 skill-only 增益（同时考虑成本和严重风险），将 skill 标记为候选移除或合并，而不是继续加规则。
-10. 评测新 skill 前先跑静态检查，并确保 fixture、机械断言和 output eval 能区分 with/without；遇到 timeout 或 rate limit 时排除运行，不修改 skill。
-11. 如果安装到个人项目，优先复制对应的 `assets/agents-snippet.md` 到项目自己的 agent instruction file；skill 只在加载时生效，不能单独保证每次都触发。
-12. 不做 Pi、Codex、Nyan 或跨 agent/model 对比；如果以后改变评测政策，再单独更新本文件和评测结果说明。
+4. `writing-tests`（15/20）、`writing-adrs`（12/20）在 haiku 上漏触发隐式场景：haiku 自己直接做完了，不加载 skill。按官方 description 指导（祈使句、略 pushy）写了候选，先测 train，validation 不下降才采用。
+5. `selecting-technologies` 的正文价值仍未证明。决定前再想一个“事实在模型截止后变化、且路由能覆盖”的 case；若仍测不出增益，考虑把“检查已固定的版本/模型”并入 `assets/agents-snippet.md`，并评估是否合并或移除该 skill。
+6. 修复前记录的 trigger 结果都可能失真（空 sandbox、`ls` 误判为加载、提问运行被排除），以 2026-11-02 haiku 重测为准。
+7. 改 skill 正文后用 `--baseline old_skill` 对比上一版；没有证明增量的改动如实标注，不要把方差当成效果。
+8. 如果新 fixture 仍无法产生稳定 skill-only 增益（同时考虑成本和严重风险），将 skill 标记为候选移除或合并，而不是继续加规则。
+9. 评测新 skill 前先跑静态检查，并确保 fixture、机械断言和 output eval 能区分 with/without；遇到 timeout 或 rate limit 时排除运行，不修改 skill。
+10. 如果安装到个人项目，优先复制对应的 `assets/agents-snippet.md` 到项目自己的 agent instruction file；skill 只在加载时生效，不能单独保证每次都触发。
+11. 不做 Pi、Codex、Nyan 或跨 agent/model 对比；如果以后改变评测政策，再单独更新本文件和评测结果说明。
 
 ## 不要做的事
 

@@ -12,6 +12,61 @@
 > date use `claude-haiku-5-5` (same cometix agent, same bwrap sandbox). Results on
 > different models are not comparable; sections say which model they used.
 
+## `reviewing-designs` redesign (2026-11-02, `claude-haiku-5-5`)
+
+The body was rewritten from the Anthropic review designs listed in its
+`references/sources.md` (architecture-critic, code-review, code-reviewer agents,
+scan-verifier, and Claude Code's explore-then-plan and adversarial-review
+guidance). Changes:
+
+- Read the project before trusting the proposal.
+- Check each claim the design depends on against repository files.
+- Try to refute a finding before reporting it.
+- Keep a design-specific false-positive list: taste, preferred technology,
+  speculative scale, re-arguing accepted ADRs, and accepted trade-offs.
+- Derive one verdict from severity.
+
+The 80/100 confidence threshold comes from Anthropic's code reviewers. Applying it
+to designs is this project's choice. The section checklist, the "require an
+alternative" gate, and the confidence-to-severity bands had no source and were
+dropped.
+
+The old three cases had no fixture and named the defect in the prompt. The new
+cases share one small project, and no prompt names the issue:
+
+| Case | Hidden fact | Expected |
+|---|---|---|
+| donor-report | the query bypasses module APIs, contradicting accepted ADR 0002 | not approve, cites the ADR or APIs |
+| stock-import | `kind = 'import'` violates the `CHECK` constraint in `app/schema.sql` | not approve, cites the constraint |
+| pickup-reminders | sound design with a stated, accepted trade-off | approve |
+| stock-search | sound design, small catalogue | approve |
+
+Two further cases (a field rename and remember-me login) were dropped because the
+baseline passed them completely in the pilot.
+
+Final paired run, 3 runs each, 12/12 with-skill runs treated:
+
+- Pass rate: 0.98 with the skill, 0.83 without.
+- Both configurations found both hidden defects in 6/6 runs.
+- The difference is all in sound designs: with the skill, 5/6 runs approved;
+  without it, 0/6. The baseline withheld approval over things the proposals had
+  already settled.
+- The one with-skill miss is defensible: the crontab has no `MAILTO`, so the
+  proposal's alerting claim is unverified.
+
+Cost: about +585k tokens and +133 s per run.
+
+Check fixes were applied before the final run, with the earlier runs re-graded:
+
+- `fact_cited` patterns were tightened after bare path mentions passed.
+- A decoy assertion had counted real query bugs as decoys.
+- Gaps in the sound-design fixtures were closed: LIKE escaping, the retry bound,
+  and the subject wording.
+- The verdict assertion is now keyed to the stated conclusion, not to headings.
+
+Decision: retain. Its measured value is calibration: it stops the reviewer from
+blocking sound designs. Finding defects is not the gain; haiku found them alone.
+
 ## `selecting-technologies` redesign (2026-11-02)
 
 Anthropic publishes no technology-selection method. The skill now follows four
@@ -301,7 +356,7 @@ runs per configuration. Results are directional evidence, not statistical proof.
 | `designing-apis` / retryable export | 1.00 | 0.33 | +14.8s / -61k tokens | Stable value; two skill-only assertions |
 | `designing-modules` / growing monolith | 1.00 | 1.00 | +5.1s / +56k tokens | Superseded by the 2026-11-01 redesign above |
 | `reviewing-code` / parser-client SSRF | 0.73 | 0.80 | +68.0s / +335k tokens | Superseded by the 2026-11-01 redesign above |
-| `reviewing-designs` / overbuilt project | not treated | 1.00 | — | Description did not load skill; no body conclusion |
+| `reviewing-designs` / overbuilt project | not treated | 1.00 | — | Superseded by the 2026-11-02 redesign above |
 | `selecting-technologies` / small project | 1.00 | 1.00 | +75.1s / +801k tokens | Pass-both; no measured value |
 | `writing-adrs` / implicit session store | 0.89 | 0.00 | +309.6s / +2.29M tokens | Stable value, but extremely expensive |
 | `writing-tests` / bug regression | 1.00 | 0.56 | +13.1s / +128k tokens | Process assertion skill-only |
