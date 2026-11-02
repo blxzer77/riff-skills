@@ -47,6 +47,10 @@ class RunResult:
     # one. Unlike `read_skill`, this excludes an agent opening SKILL.md as an ordinary
     # file, which happens when the workspace is empty and the skill is all it can see.
     invoked_skill: set[str] = field(default_factory=set)
+    # The agent stopped to ask the user a question. A non-interactive run cannot
+    # answer, so it ends in an error state; for routing, the agent had already
+    # decided which skills to load, so the run is evidence, not an infra failure.
+    asked_user: bool = False
 
 
 @dataclass
@@ -78,6 +82,9 @@ _READ_COMMAND = re.compile(
     r"(?:^|[/\\\s\"'`=])([^/\\\s\"'`=;&|]+)[/\\]SKILL\.md",
     re.IGNORECASE,
 )
+# Tools that pause the run to ask the user something. In a non-interactive run the
+# request is aborted and the agent exits with an error.
+ASK_USER_TOOLS = {"AskUserQuestion"}
 
 
 def skill_loads(tool: str, args) -> set[str]:
@@ -440,7 +447,7 @@ class ClaudeCodeAdapter(Adapter):
         if path is None:
             return RunResult(response, tokens, stdout.splitlines(), set(), error)
         lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
-        read, invoked = set(), set()
+        read, invoked, asked = set(), set(), False
         for entry in _json_lines("\n".join(lines)):
             content = (entry.get("message") or {}).get("content")
             if not isinstance(content, list):
@@ -453,10 +460,12 @@ class ClaudeCodeAdapter(Adapter):
                     skill = payload["skill"].split(":")[-1]
                     read.add(skill)
                     invoked.add(skill)
+                elif block.get("name") in ASK_USER_TOOLS:
+                    asked = True
                 else:
                     read |= skill_loads(block.get("name", ""), payload)
         self._remove_session(path, Path(workdir))
-        return RunResult(response, tokens, lines, read, error, invoked)
+        return RunResult(response, tokens, lines, read, error, invoked, asked)
 
     def tool_log(self, transcript_lines):
         calls, steps = {}, []
