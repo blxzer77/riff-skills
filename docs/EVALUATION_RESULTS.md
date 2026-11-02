@@ -8,9 +8,11 @@
 > Current policy (2026-10-31): run new evaluations only with local cometix and
 > `deepseek-flash`; do not compare these results directly with the historical Pi run.
 >
-> Model change (2026-11-02): `deepseek-flash` hit its monthly cap, so runs from this
-> date use `claude-haiku-5-5` (same cometix agent, same bwrap sandbox). Results on
-> different models are not comparable; sections say which model they used.
+> Model change (2026-11-02): `deepseek-flash` hit its monthly cap, so runs on that
+> day used `claude-haiku-5-5` (same cometix agent, same bwrap sandbox). Later the
+> same day `deepseek-flash` recovered and is the evaluation model again. Results on
+> different models are not comparable; each section says which model it used, and
+> description and body decisions are made on `deepseek-flash`.
 
 ## `reviewing-designs` redesign (2026-11-02, `claude-haiku-5-5`)
 
@@ -436,8 +438,44 @@ regression test. That is the behaviour the skills target. Both descriptions
 already list these contexts. Anthropic's guidance says agents consult skills only
 for tasks beyond what they can handle alone, and that descriptions should be
 imperative and "a little bit pushy". Both current descriptions open with
-"Writes ...". Imperative candidates are being tested on train first, and will be
-adopted only if validation does not regress.
+"Writes ...". Imperative candidates were written for both skills.
+
+On haiku train:
+
+- `writing-tests` went from 8/12 to 11/12. The bug-fix, pagination, and coverage
+  queries rose from 0/3 to 2/3.
+- `writing-adrs` went from 7/12 to 9/12, with 7 runs timing out on
+  migrate-and-record queries.
+
+The haiku validation runs were stopped when `deepseek-flash` came back, so the
+adoption decision was made on `deepseek-flash`. Both versions were run on the full
+query set, 3 runs each, with a 600 s timeout:
+
+| Skill | Version | Passed | Train | Validation | False positives |
+|---|---|---:|---:|---:|---:|
+| writing-tests | current | 16/20 | 10/12 | 6/8 | 0 |
+| writing-tests | candidate | 16/20 | 11/12 | 5/8 | 1 (vitest upgrade, 2/3) |
+| writing-adrs | current | 17/20 | 10/12 | 7/8 | 0 |
+| writing-adrs | candidate | 17/20 | 10/12 | 7/8 | 1 ("explain ADR vs RFC", 2/3) |
+
+Neither candidate was adopted. The `writing-tests` candidate gained one train
+query and lost one validation query, and the `writing-adrs` candidate gained
+nothing; each added a false positive. This repeats the earlier `writing-tests`
+result: a pushier description raises recall on its training queries and buys
+false positives elsewhere.
+
+On `deepseek-flash` the current descriptions already route better than on haiku
+(16 vs 15, and 17 vs 12). Some queries stay at 0–1/3 with either wording; in each
+of them the agent does the work itself:
+
+- refactoring the PDF generator
+- a flaky integration test
+- a retry wrapper
+- adding a second LLM provider
+- websockets vs SSE
+
+For projects that want the rule every time, the channel is each skill's
+`assets/agents-snippet.md`.
 
 ### Earlier exploratory runs (deepseek-flash, empty sandbox)
 

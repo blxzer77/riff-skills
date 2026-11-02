@@ -121,7 +121,7 @@ e519d0dd4d16be63b956fd35ab52fd6644840328
 - 已按官方规范和最佳实践完成内容审查，并修正无条件规则、评测断言、review fixture 和测试 references。
 - 已提交 treatment-aware harness：`ef6c8c5`。它区分 routing、treated body effect、baseline 和 infrastructure failure。
 - treatment-aware 结果显示：`designing-apis`、`writing-adrs`、`writing-tests`、`authoring-skills`、`reviewing-code`、`building-llm-applications`、`designing-modules`、`reviewing-designs` 在关键 case 上有增益；`selecting-technologies` 正文增益尚未测出（见下）。
-- 评测模型：2026-11-02 起 `deepseek-flash` 触发月度上限（约 2026-11-17 重置），用户同意改用 `claude-haiku-5-5`。两个模型的结果不可直接比较；`docs/EVALUATION_RESULTS.md` 每节注明模型。
+- 评测模型：`deepseek-flash`。2026-11-02 它一度触发月度上限，当天临时用 `claude-haiku-5-5` 跑了一批；同日 deepseek 恢复，之后的评测和所有 description/正文决定都回到 deepseek。两个模型的结果不可直接比较；`docs/EVALUATION_RESULTS.md` 每节注明模型。
 - sandbox 包装脚本 `~/.cache/riff-skills/bin/cometix-sandboxed` 在登录用户变更后丢失过一次，已重建：只允许在 `~/.cache/riff-skills/runs/*/work` 和 grader 用的 `/tmp/riff-complete-*/work` 下运行。缺失时先重建再跑评测，不要裸跑 cometix。
 - `designing-modules` 改用非 Anthropic 一手资料（Anthropic 没有模块边界方面的指导；来源见其 `references/sources.md`）。增益只集中在一个行为：边界只体现在代码约定、未写成文档时，通过公开 API 访问而不是越界 import internal（deepseek 上 baseline 6 次中 5 次越界，with-skill 6/6 正确）。haiku 上 trigger 18/20，0 误触发。
 - `reviewing-designs` 按 Anthropic 审查设计重写，换成 4 个 fixture case（prompt 不点题）。haiku 上 0.98 vs 0.83：两边都能找出隐藏缺陷，差别在“健全设计给 approve”（with-skill 5/6，baseline 0/6）。成本约 +585k token/次。trigger 18/20。
@@ -144,7 +144,7 @@ e519d0dd4d16be63b956fd35ab52fd6644840328
 
 2. 阅读本文件和 `docs/EVALUATION_RESULTS.md`，再阅读 `skills/evaluating-skills/SKILL.md`。
 3. 其余 skill 按 `reviewing-code` 的方法重做：先找 Anthropic / Claude Code 团队对应的官方材料并钉住版本，再对照重写正文；eval 用“必须做到 + 不能做的诱饵”配对 case，判定优先机械检查，check 先做 good / near-miss / empty 三态校验。
-4. `writing-tests`（15/20）、`writing-adrs`（12/20）在 haiku 上漏触发隐式场景：haiku 自己直接做完了，不加载 skill。按官方 description 指导（祈使句、略 pushy）写了候选，先测 train，validation 不下降才采用。
+4. `writing-tests`、`writing-adrs` 的 description 已在 deepseek 上用完整查询集对比过（当前 16/20、17/20，0 误触发；更 pushy 的候选各带来 1 个误触发、validation 无提升），保留当前版本。剩下的漏触发都是 agent 自己能直接做完的任务（重构、flaky 测试、加第二个 LLM provider 等），不要再靠加强 description 解决；需要每次都生效的项目用 `assets/agents-snippet.md`。
 5. `selecting-technologies` 的正文价值仍未证明。决定前再想一个“事实在模型截止后变化、且路由能覆盖”的 case；若仍测不出增益，考虑把“检查已固定的版本/模型”并入 `assets/agents-snippet.md`，并评估是否合并或移除该 skill。
 6. 修复前记录的 trigger 结果都可能失真（空 sandbox、`ls` 误判为加载、提问运行被排除），以 2026-11-02 haiku 重测为准。
 7. 改 skill 正文后用 `--baseline old_skill` 对比上一版；没有证明增量的改动如实标注，不要把方差当成效果。
