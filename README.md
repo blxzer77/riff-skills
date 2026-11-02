@@ -35,16 +35,35 @@ Copy or symlink a skill directory into a location your agent scans:
 Or install with the [`skills`](https://github.com/vercel-labs/skills) CLI:
 
 ```bash
-npx skills add blxzer77/riff-skills                 # choose skills and agents interactively
-npx skills add blxzer77/riff-skills --skill writing-tests
+# Install interactively for the current project
+npx skills add blxzer77/riff-skills
+
+# Install selected skills globally or into the current project
+npx skills add blxzer77/riff-skills --skill writing-tests --global
+npx skills add blxzer77/riff-skills --skill reviewing-code --yes
 ```
 
-Claude Code can also add this repository as a plugin marketplace:
+The CLI records the source of installed skills, so update them from the same
+repository with:
+
+```bash
+npx skills update              # update project-scoped installations
+npx skills update --global     # update user-scoped installations
+npx skills update writing-tests
+```
+
+Claude Code can also add this repository as a plugin marketplace. Refresh the
+marketplace catalog before installing an updated plugin, then update or reinstall
+it from the `/plugin` menu:
 
 ```
 /plugin marketplace add blxzer77/riff-skills
 /plugin install riff-skills@riff-skills
+/plugin marketplace update riff-skills
 ```
+
+For a local checkout, copying or symlinking a skill is still supported, but it does
+not provide automatic updates; use the CLI or marketplace path when updates matter.
 
 ## Habits that must always hold
 
