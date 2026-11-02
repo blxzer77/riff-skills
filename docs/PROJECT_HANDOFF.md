@@ -121,11 +121,11 @@ e519d0dd4d16be63b956fd35ab52fd6644840328
 - 已按官方规范和最佳实践完成内容审查，并修正无条件规则、评测断言、review fixture 和测试 references。
 - 已提交 treatment-aware harness：`ef6c8c5`。它区分 routing、treated body effect、baseline 和 infrastructure failure。
 - treatment-aware 结果显示：`designing-apis`、`writing-adrs`、`writing-tests`、`authoring-skills`、`reviewing-code`、`building-llm-applications`、`designing-modules`、`reviewing-designs` 在关键 case 上有增益；`selecting-technologies` 正文增益尚未测出（见下）。
-- 评测模型：`deepseek-flash`。2026-11-02 它一度触发月度上限，当天临时用 `claude-haiku-5-5` 跑了一批；同日 deepseek 短暂恢复，随后最小请求又返回 HTTP 500 `empty response content`。两个模型的结果不可直接比较；`docs/EVALUATION_RESULTS.md` 每节注明模型。恢复前不要启动新 eval。
+- 评测模型：`deepseek-flash`。2026-11-02 它一度触发月度上限，当天临时用 `claude-haiku-5-5` 跑了一批；之后 deepseek 已通过 sandbox probe 恢复，后续正式评测继续使用 deepseek。两个模型的结果不可直接比较；`docs/EVALUATION_RESULTS.md` 每节注明模型。正式批次前先跑 sandbox probe。
 - sandbox 包装脚本 `~/.cache/riff-skills/bin/cometix-sandboxed` 在登录用户变更后丢失过一次，已重建：只允许在 `~/.cache/riff-skills/runs/*/work` 和 grader 用的 `/tmp/riff-complete-*/work` 下运行。缺失时先重建再跑评测，不要裸跑 cometix。
 - `designing-modules` 改用非 Anthropic 一手资料（Anthropic 没有模块边界方面的指导；来源见其 `references/sources.md`）。增益只集中在一个行为：边界只体现在代码约定、未写成文档时，通过公开 API 访问而不是越界 import internal（deepseek 上 baseline 6 次中 5 次越界，with-skill 6/6 正确）。haiku 上 trigger 18/20，0 误触发。
 - `reviewing-designs` 按 Anthropic 审查设计重写，换成 4 个 fixture case（prompt 不点题）。haiku 上 0.98 vs 0.83：两边都能找出隐藏缺陷，差别在“健全设计给 approve”（with-skill 5/6，baseline 0/6）。成本约 +585k token/次。trigger 18/20。
-- `selecting-technologies` 在 haiku 上：5 个 case baseline 全过（haiku 训练截止晚于这些事实）；case 6（仓库已固定一个 2026-09 弃用的模型）baseline 3/3 沿用，能区分，但 description 的排除条款让 skill 不被加载，正文效果未测。trigger 19/20，description 不改。
+- `selecting-technologies` 在 deepseek 上新增第 7 个 case：选择更便宜的 triage 模型时，baseline 3/3 都没有报告仓库固定主模型的退役状态；当前 skill 3/3 报告，机械检查两边均通过。正文改动已提交。haiku 的 19/20 trigger 和旧 case 结果只作为不可比较的辅助证据。
 - trigger harness：agent 调用提问工具后在非交互模式下会被中止，这类运行现在计入路由结果，不再当作错误排除。
 - trigger eval 现在支持 `fixture`：需要输入才能工作的 skill（审查代码、审查设计、写 ADR）必须在有真实输入的 sandbox 里测路由。`reviewing-code` 加 fixture 后为 20/20；空仓库下的 12/20 和更早的 16/20 都是环境造成的。
 - `reviewing-code` 已按 Anthropic / Claude Code 官方审查设计重写（来源和 SHA 见 `skills/reviewing-code/references/sources.md`），eval 改为“真缺陷 + 官方 false-positive 诱饵”的配对 case 和机械检查；两轮独立复测均为约 0.85 vs 0.65。之前的“无增益”结论来自评测风格偏好的坏断言，已作废。
