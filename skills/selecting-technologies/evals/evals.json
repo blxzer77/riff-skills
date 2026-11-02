@@ -130,6 +130,26 @@
           "text": "The final response tells the user that the configured model (claude-sonnet-4-5-20250929) is deprecated or retiring, or states that it was replaced for that reason"
         }
       ]
+    },
+    {
+      "id": 7,
+      "name": "cheaper-triage-model",
+      "prompt": "Triage runs on every ticket and the LLM bill is getting high. Pick a cheaper model for triage only, keep the main model for everything else, wire it in, and keep the tests passing.",
+      "expected_output": "Checks the provider's current model list and prices rather than memory, and gives triage an active model that costs less than the main model (for example a current Haiku). Because it reads the model list, it notices that the main MODEL (claude-sonnet-4-5-20250929) was deprecated on 2026-09-30 and retires on 2026-11-30, and tells the user, even though the request was to leave it alone. Tests pass offline.",
+      "files": [
+        "evals/files/model-in-repo"
+      ],
+      "assertions": [
+        {
+          "id": "triage-model",
+          "text": "triage requests an active Claude model that is cheaper than the main model, and the tests pass after a clean install",
+          "script": "evals/checks/triage_model.py"
+        },
+        {
+          "id": "retirement-flagged",
+          "text": "The final response tells the user that the main model (claude-sonnet-4-5-20250929) is deprecated or retiring, or states that it was replaced for that reason"
+        }
+      ]
     }
   ]
 }

@@ -12,7 +12,9 @@
 > day used `claude-haiku-5-5` (same cometix agent, same bwrap sandbox). Later the
 > same day `deepseek-flash` recovered and is the evaluation model again. Results on
 > different models are not comparable; each section says which model it used, and
-> description and body decisions are made on `deepseek-flash`.
+> description and body decisions are made on `deepseek-flash`. The proxy later returned
+HTTP 500 `empty response content` for a minimal deepseek request; no new run is
+valid until a minimal probe returns 200 again.
 
 ## `reviewing-designs` redesign (2026-11-02, `claude-haiku-5-5`)
 
@@ -142,6 +144,29 @@ pass-both. The sixth discriminates on the baseline, but routing does not load th
 skill for a prompt that only extends existing code. Forcing the load would no
 longer measure the skill as shipped. For "check what is already pinned", the
 always-on channel is `assets/agents-snippet.md`, not the skill.
+
+### Deepseek-flash baseline and follow-up case (2026-11-02)
+
+The six-case baseline pilot on deepseek differs from haiku: password-hashing,
+container-node, claude-summary, background-email, and reuse-http are still
+pass-both; model-in-repo is 1/2 in both runs because the baseline keeps the
+repository's deprecated model. The baseline did not use web lookup in these
+runs, and still chose current-looking Node and Claude IDs from memory.
+
+A seventh case asks the agent to choose a cheaper model for ticket triage while
+keeping the main model. It uses the same repository, whose main model is the
+deprecated `claude-sonnet-4-5-20250929`. The mechanical assertion is pass-both
+in all three baseline runs: triage uses active, cheaper Haiku 4.5. The LLM
+assertion fails in all three: the baseline does not warn about the main model's
+retirement.
+
+A paired comparison was started after adding guidance to audit all pinned models
+and report aged facts even when the user says to leave them alone. The old skill
+scored 2/2 in all three runs; the current modified skill scored 2/2, 2/2, and
+1/2. This is promising but not stable evidence, and the old skill was also
+lucky on the same small sample. The body change is not committed. Deepseek then
+began returning HTTP 500 `empty response content`, so the confirmation rerun is
+pending.
 
 ## `designing-modules` redesign (2026-11-01)
 
