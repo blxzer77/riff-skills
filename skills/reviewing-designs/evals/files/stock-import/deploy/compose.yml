@@ -1,0 +1,18 @@
+services:
+  web:
+    build: ..
+    command: gunicorn -c deploy/gunicorn.conf.py "app:create_app()"
+    environment:
+      PANTRY_DB: /data/pantry.db
+      PANTRY_SECRET_KEY: ${PANTRY_SECRET_KEY}
+      SMTP_HOST: smtp.mailrelay.example
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+    volumes:
+      - pantry-data:/data
+      - /srv/pantry/backups:/backups
+    ports: ["8000:8000"]
+    restart: unless-stopped
+
+volumes:
+  pantry-data:

@@ -1,0 +1,34 @@
+# Curation map: published guidance -> skills/reviewing-designs.
+# Anthropic publishes code-review designs and an architecture critic, but no
+# design-document review method; their principles are applied to designs, and the
+# remaining guidance comes from the primary sources below. Fetched 2026-11-02.
+anthropic:
+  repository: anthropics/claude-plugins-official
+  commit: a7ba5b93db0c7c8d17f3f1d25853adca79598a1a
+  adopted:
+    - path: plugins/code-modernization/agents/architecture-critic.md
+      principle: skeptical default; simplest design meeting requirements; trace one failure; migration story
+    - path: plugins/code-review/commands/code-review.md
+      principle: high signal only; validate each candidate; false-positive list; report-only
+    - path: plugins/pr-review-toolkit/agents/code-reviewer.md
+      principle: confidence 0-100, report at 80 or above (defined for code; applied to designs by this project)
+    - path: plugins/feature-dev/agents/code-reviewer.md
+      principle: same confidence threshold
+    - path: plugins/feature-dev/agents/code-architect.md
+      principle: read existing patterns and boundaries first; one decisive choice
+    - path: plugins/claude-security/agents/scan-verifier.md
+      principle: refute-first; cite the decisive file and line; no invented defenses
+  docs:
+    - url: https://code.claude.com/docs/en/best-practices
+      sections: ["Explore first, then plan, then code", "Add an adversarial review step"]
+primary:
+  - source: https://www.industrialempathy.com/posts/design-docs-at-google/
+  - source: https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions
+  - source: https://martinfowler.com/bliki/ParallelChange.html
+dropped:
+  - claim: required design-doc section checklist (context, drivers, security, verification, consequences)
+    reason: reviews judged documents by missing sections; no source makes a missing section a finding
+  - claim: "Require at least one viable alternative" as a review rule
+    reason: Google design-doc guidance describes alternatives as content, not a review gate
+  - claim: confidence bands 50-79 / 90-100 mapped to severities
+    reason: not in the cited reviewer agents; severity now follows the evidenced consequence

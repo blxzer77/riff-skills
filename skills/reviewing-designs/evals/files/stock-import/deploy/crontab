@@ -1,0 +1,2 @@
+# Host crontab on the VM (installed with `crontab deploy/crontab`).
+15 3 * * * cd /srv/pantry && docker compose exec -T web flask backup /backups
