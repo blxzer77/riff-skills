@@ -7,8 +7,12 @@
 >
 > Current policy (2026-10-31): run new evaluations only with local cometix and
 > `deepseek-flash`; do not compare these results directly with the historical Pi run.
+>
+> Model change (2026-11-02): `deepseek-flash` hit its monthly cap, so runs from this
+> date use `claude-haiku-5-5` (same cometix agent, same bwrap sandbox). Results on
+> different models are not comparable; sections say which model they used.
 
-## `selecting-technologies` redesign (2026-11-02, not yet run)
+## `selecting-technologies` redesign (2026-11-02)
 
 Anthropic publishes no technology-selection method. The skill now follows four
 principles from Anthropic's plugins and docs (read the existing stack first, check
@@ -42,9 +46,45 @@ One leakage risk is known: the SKILL.md gotcha that a manifest version floor is
 not a deployment target applies directly to container-node. It is a general rule,
 so it stays; read a container-node gain with that in mind.
 
-No agent run exists yet: the `deepseek-flash` account hit its monthly inference
-cap before the baseline pilot could finish (see below). The first run should be a
-baseline-only pilot to confirm the cases discriminate, then a paired run.
+### Baseline pilot on `claude-haiku-5-5`
+
+Two baseline runs per case. All five cases above are pass-both candidates: the
+baseline chose argon2-cffi, `node:22-alpine`, `claude-sonnet-4-6`, and an
+in-process thread pool, and reused httpx. Haiku's training cutoff (June 2026) is
+later than the facts these cases test, so "check instead of remembering" has
+nothing to correct. The reuse-http baseline first scored 0.50 because the check
+assumed one response shape the prompt never specified; the check now accepts any
+plausible shape, and both runs were re-graded on the same artifacts.
+
+A sixth case targets a fact that changed after that cutoff. The repository already
+pins `claude-sonnet-4-5-20250929`, deprecated on 2026-09-30 and retiring on
+2026-11-30, and the prompt asks for a new feature "using the existing LLM setup".
+The baseline kept the deprecated model and did not mention it in 3 of 3 runs.
+All three with-skill runs were `not_treated`: the agent listed the installed
+`SKILL.md` but did not load it. The description's exclusion ("code changes that
+use only what the project already depends on") matches this prompt. That is a
+routing result, not evidence about the body; the trigger eval decides whether the
+description changes.
+
+### Trigger evaluation on `claude-haiku-5-5`
+
+20 fixture-backed queries, 3 runs each: 19/20, with train 11/12, validation 8/8,
+no false positives, and no infrastructure errors. The one train miss, "upgrade
+whatever is outdated in requirements.txt", turned out to be a fixture fault. That
+fixture's requirements.txt is empty, so the agent correctly found nothing to
+upgrade. The query now runs against background-email, whose pins are behind
+current releases.
+
+Rerun on that fixture, the current description triggered 3 of 4 completed runs
+and a candidate that names upgrades triggered 4 of 4. The difference is within
+noise, and the candidate was no better on the rest of train (11/12, three
+positives down to 2/3). The description is unchanged.
+
+Decision so far: the body's value is unmeasured on haiku. Five cases are
+pass-both. The sixth discriminates on the baseline, but routing does not load the
+skill for a prompt that only extends existing code. Forcing the load would no
+longer measure the skill as shipped. For "check what is already pinned", the
+always-on channel is `assets/agents-snippet.md`, not the skill.
 
 ## `designing-modules` redesign (2026-11-01)
 
@@ -85,12 +125,23 @@ Decision: retain `designing-modules`, with value limited to one well-defined
 behavior: respecting code-level module boundaries that are not documented. Its
 `agents-snippet.md` carries the everyday rule for projects that want it always on.
 
-Trigger evaluation is not measured yet. A new query set was written (20 queries,
-all run against the implicit extract-refunds fixture), but the run was stopped on
-2026-11-02 after the `deepseek-flash` account hit its monthly inference cap: every
-agent call returned HTTP 429 and timed out. No trigger result exists for this
-description. The output runs above finished before the cap (all exit 0, no
-timeouts) and are unaffected.
+The output runs above used `deepseek-flash` and finished before its monthly cap
+(all exit 0, no timeouts). The trigger run on that model was stopped when every
+call began returning HTTP 429, and left no result.
+
+Trigger evaluation on `claude-haiku-5-5` (20 queries against the implicit
+extract-refunds fixture, 3 runs each): 18/20, train 11/12, validation 7/8, no
+false positives, 2 infrastructure errors. The misses were:
+
+- "this codebase is a tangle…" (train), 1/3, borderline. The description already
+  says "even if the user only says the code is tangled".
+- "replace the in-memory order store with a postgres-backed one, gradually"
+  (validation), 0/3. Only validation failed, so the description was not changed.
+
+A first run scored 15/20 because nine runs were excluded as errors. Several of
+them were the agent asking the user a question, which aborts a non-interactive
+run. Those runs are now counted (see the harness note below), and the 18/20 is
+the rerun.
 
 ## `reviewing-code` trigger re-measurement (2026-11-01)
 
@@ -154,6 +205,17 @@ three runs each): train 11/12, validation 7/8, one query errored. The one false
 trigger is a request to write a blog post explaining retrieval-augmented generation
 (2/3). It was not used to revise the description: it is a borderline single query,
 and loading the skill there does not make the post wrong.
+
+## Trigger runs that end in a question (2026-11-02)
+
+In a non-interactive run, an agent that calls its ask-the-user tool is aborted and
+exits with `error_during_execution`. The trigger harness excluded those runs as
+infrastructure failures. The agent had already chosen whether to load the skill
+before it asked, so excluding them dropped real routing evidence. For example,
+"add logging to refund_order so we can see who issued each refund" errored in all
+three runs and was recorded as having no data. The claude-code adapter now records
+whether the agent asked, and such runs count. Output evals still treat them as
+errors, because the run produced no work to grade.
 
 ## Trigger detection fix (2026-11-01)
 
@@ -290,6 +352,39 @@ The `designing-modules` run is excluded: all with-skill cases finished without
 loading the skill, so it measures description discovery rather than output quality.
 
 ## Current trigger evidence
+
+### Fixture-backed re-measurement on `claude-haiku-5-5` (2026-11-02)
+
+The queries now run in fixture repositories that hold the files they name. All
+runs use 3 repetitions, and question-ending runs are counted. There were no false
+positives on any skill.
+
+| Skill | Passed | Train | Validation | Infra errors |
+|---|---:|---:|---:|---:|
+| selecting-technologies | 19/20 | 11/12 | 8/8 | 0 |
+| designing-modules | 18/20 | 11/12 | 7/8 | 2 |
+| reviewing-designs | 18/20 | 11/12 | 7/8 | 0 |
+| writing-tests | 15/20 | 8/12 | 7/8 | 2 |
+| writing-adrs | 12/20 | 7/12 | 5/8 | 5 (all timeouts) |
+
+`writing-tests` and `writing-adrs` miss the implicit cases they exist for. Neither
+skill was loaded for these four queries:
+
+- "fix the 500 on /checkout"
+- "add cursor pagination"
+- "refactor the PDF generator"
+- "we decided to drop GraphQL, record that decision"
+
+Replaying three of the misses showed that haiku did the work itself. It wrote an
+ADR that it noted lacked the reasoning, and it fixed the bug without a
+regression test. That is the behaviour the skills target. Both descriptions
+already list these contexts. Anthropic's guidance says agents consult skills only
+for tasks beyond what they can handle alone, and that descriptions should be
+imperative and "a little bit pushy". Both current descriptions open with
+"Writes ...". Imperative candidates are being tested on train first, and will be
+adopted only if validation does not regress.
+
+### Earlier exploratory runs (deepseek-flash, empty sandbox)
 
 The revised formal description for `writing-tests` produced `15/20` on an exploratory
 run (`train` `9/12`, `validation` `6/8` among completed runs), with two provider/agent
