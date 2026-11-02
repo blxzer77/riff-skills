@@ -162,11 +162,13 @@ retirement.
 
 A paired comparison was started after adding guidance to audit all pinned models
 and report aged facts even when the user says to leave them alone. The old skill
-scored 2/2 in all three runs; the current modified skill scored 2/2, 2/2, and
-1/2. This is promising but not stable evidence, and the old skill was also
-lucky on the same small sample. The body change is not committed. Deepseek then
-began returning HTTP 500 `empty response content`, so the confirmation rerun is
-pending.
+scored 2/2 in all three runs; the first current-skill sample scored 2/2, 2/2,
+and 1/2. After the proxy recovered, the current skill was rerun three times on
+the same case: 2/2 in all three runs. The baseline's retirement-warning
+assertion was 0/3, while the current skill was 3/3. This is stable evidence for
+this one behavior, not a claim about every technology choice. The body change is
+now committed; no full seven-case paired rerun was needed because the other six
+cases are pass-both or not treated.
 
 ## `designing-modules` redesign (2026-11-01)
 

@@ -36,6 +36,11 @@ or model, check what the project already has and what is true today.
      deprecation page. Do not use an ID you cannot find there.
    - **Advisories**: no known unfixed vulnerability in the version you add.
    - **Works here**: it installs and runs on the project's runtime version.
+   Do not limit the lookup to the new choice. Audit every model ID, runtime,
+   base image, and dependency that the changed code touches. If one is
+   deprecated, end of life, or retiring soon, report it as a separate warning
+   with the date even when the user says to leave it alone; never silently leave
+   an aged fact unmentioned. Change it only if asked.
    If you cannot reach the network, say which facts are unchecked and mark them
    in the code or the reply; do not present remembered versions as current.
 4. **Decide in proportion.** A small, reversible choice (one library behind a
