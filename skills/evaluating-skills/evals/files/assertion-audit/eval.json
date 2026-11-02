@@ -1,0 +1,1 @@
+{"assertions":[{"id":"has-heading","text":"response contains a Results heading"},{"id":"mentions-count","text":"response contains exactly 3 findings"}],"schema":{"output":"markdown report with a Findings section"}}

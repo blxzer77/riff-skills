@@ -143,7 +143,7 @@ e519d0dd4d16be63b956fd35ab52fd6644840328
    ```
 
 2. 阅读本文件和 `docs/EVALUATION_RESULTS.md`，再阅读 `skills/evaluating-skills/SKILL.md`。
-3. 其余 skill 按 `reviewing-code` 的方法重做：先找 Anthropic / Claude Code 团队对应的官方材料并钉住版本，再对照重写正文；eval 用“必须做到 + 不能做的诱饵”配对 case，判定优先机械检查，check 先做 good / near-miss / empty 三态校验。
+3. `evaluating-skills` 已重做并在 deepseek 上完成 baseline / paired eval；结果为 0.86 vs 0.64，稳定增益集中在修复与验证矛盾 assertion。后续新增 evaluator 规则时，必须继续用不泄题 fixture，并把 harness policy 标为项目规则。
 4. `writing-tests`、`writing-adrs` 的 description 已在 deepseek 上用完整查询集对比过（当前 16/20、17/20，0 误触发；更 pushy 的候选各带来 1 个误触发、validation 无提升），保留当前版本。剩下的漏触发都是 agent 自己能直接做完的任务（重构、flaky 测试、加第二个 LLM provider 等），不要再靠加强 description 解决；需要每次都生效的项目用 `assets/agents-snippet.md`。
 5. `selecting-technologies` 第 7 个 case 已在 deepseek 上确认增益：baseline 三次都不报告仓库固定模型的退役状态，当前 skill 三次都报告；机械检查两边均通过。正文改动已提交，增益范围限定为“选择新技术时同时审计相邻已固定模型/版本并报告老化事实”。
 6. 修复前记录的 trigger 结果都可能失真（空 sandbox、`ls` 误判为加载、提问运行被排除），以 2026-11-02 haiku 重测为准。

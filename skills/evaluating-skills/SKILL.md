@@ -14,8 +14,8 @@ in four layers, cheapest first, and stop at the layer that answers the user's qu
 | Layer | Answers | Cost | Guide |
 |---|---|---|---|
 | 1. Static review | Is it well-formed and well-written? | no agent runs | `references/static-review.md` |
-| 2. Trigger evals | Does the agent load it at the right times? | ~60 short runs | `references/trigger-evals.md` |
-| 3. Output evals | Does it improve results, at what cost? | 2 × cases × runs | `references/output-evals.md` |
+| 2. Trigger evals | Does the agent load it at the right times? | short exploratory runs | `references/trigger-evals.md` |
+| 3. Output evals | Does it improve results, at what cost? | paired runs per case | `references/output-evals.md` |
 | 4. Comparison | Which of two versions is better overall? | reviewer passes | `references/comparator.md` |
 
 When the user does not name a question, start with layer 1, then choose the
@@ -33,17 +33,30 @@ two versions need a holistic comparison.
       `references/agents.md` for the supported adapters and isolation caveats.
 - [ ] Ensure `evals/evals.json` exists (≥ 3 cases). Draft missing cases with the user;
       their real tasks make better cases than invented ones.
-- [ ] Layer 3: run, grade, aggregate, review with the user, iterate. Exclude
-      timeouts, API errors, invalid grading, and with-skill runs that did not load
-      the skill from the treatment effect; report each count separately.
 - [ ] Layer 2: ensure `evals/trigger-queries.json` exists, measure, optimize if
-      needed. Treat routing and skill-body quality as separate questions.
+      needed. Treat routing and skill-body quality as separate questions. A simple
+      task may not invoke a useful skill; that alone is not a description failure.
+- [ ] Layer 3: run, grade, aggregate, review with the user, iterate. Prompts must
+      not reveal the behavior being tested. Prefer artifact-based assertions, and
+      validate each mechanical check against the untouched fixture, a good output,
+      a near-miss, an empty output, and a correct alternative implementation.
+      Exclude timeouts, API errors, invalid grading, and with-skill runs that did
+      not load the skill from the treatment effect; report each count separately.
+      If a check or fixture changes, re-grade every existing configuration on the
+      same artifacts before interpreting the result. Replace pass-both and
+      fail-both assertions; inspect primary-only and baseline-only cases.
 - [ ] Report (template below). Leave the workspace for the user; it is not committed.
 
 ## Scripts
 
 All scripts are Python 3.11+ standard library; run them, don't read them. Each takes
 `--help`. File formats are in `references/schemas.md`.
+
+The adapter names, native skill invocation, treatment status, retries, timeouts, and
+sandbox isolation described in the references are this repository's harness policy,
+not Agent Skills requirements or universal agent behavior. If a platform lacks an
+adapter, isolation, structured logs, or a grading script, use the documented manual
+branch and state the limitation.
 
 | Script | Purpose |
 |---|---|

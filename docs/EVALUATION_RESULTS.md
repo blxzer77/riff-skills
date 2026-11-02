@@ -516,6 +516,51 @@ The `evaluating-skills` baseline case for writing trigger queries timed out twic
 1200 seconds. It is excluded rather than treated as a skill failure. The current
 benchmark policy does not infer quality from incomplete baseline runs.
 
+## `evaluating-skills` redesign (2026-11-02, `deepseek-flash`)
+
+The skill was revised to separate portable Agent Skills guidance from this
+repository's harness policy. Adapter names, native invocation, treatment status,
+retries, timeouts, grading, and sandbox isolation are explicitly labeled as local
+policy rather than spec requirements. The workflow now states that output prompts
+must not reveal the behavior under test, checks must be validated on untouched,
+good, near-miss, empty, and equivalent alternatives, and any check change requires
+re-grading all existing runs on the same artifacts.
+
+The old output cases leaked their answers. They were replaced with four fixture
+cases:
+
+| Case | Purpose |
+|---|---|
+| review-fixture | static review of a malformed skill without naming the hidden issue |
+| interpret-benchmark | classify pass-both/fail-both, primary-only, baseline-only, untreated, timeout, error, and invalid-grading records |
+| design-trigger-set | create trigger queries from a domain fixture without specifying balance or implicit-case rules |
+| audit-assertions | repair a contradictory assertion and validate its checks against artifact variants |
+
+The previous `trigger_queries_valid.py` hardcoded `writing-adrs`; it now discovers
+`trigger-queries.json` in the artifact or accepts a path argument.
+
+The corrected paired run used 3 repetitions, with 11/12 treated with-skill runs
+(the second design-trigger baseline timed out). Aggregate pass rate was 0.86 with
+the skill versus 0.64 without, a +0.22 difference. The stable value is concentrated
+in `audit-assertions`: with-skill passed 2/3 and baseline 0/3 on both mechanical
+assertions. `design-trigger-set` and `review-fixture` passed in both configurations.
+`interpret-benchmark` improved on one mechanical separation/cost assertion but
+remained noisy.
+
+Cost was about +131 seconds per run. Token totals are not comparable in the simple
+aggregate because the baseline included a very long trigger-query run and one
+baseline timeout; report the raw per-case values rather than treating the negative
+aggregate token delta as a general cost saving. The assertion-audit check was fixed
+after the first grading pass to inspect the repaired `eval.json`, generated scripts,
+and good/near-miss/empty artifacts; all paired runs were re-graded on the same
+artifacts. The trigger-query and benchmark checks were also validated on good and
+near-miss responses.
+
+Decision: retain, with a narrow measured benefit: it helps an evaluator detect and
+repair an assertion that contradicts the fixture schema and test the repair across
+artifact variants. The other methodology claims are not independently demonstrated
+by these cases.
+
 ## `writing-tests`
 
 Iteration 2 benchmark:
