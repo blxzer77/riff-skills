@@ -237,6 +237,15 @@ def check_evals(skill_dir: Path, where: str, name: str | None, rep: Report) -> N
         rep.warn(where, "some trigger queries have no train/validation set; run split_queries.py")
 
 
+def check_distribution(rep: Report) -> None:
+    for skill_md in sorted(REPO.glob("*/SKILL.md")):
+        rep.error(
+            "distribution",
+            f"non-installable root SKILL.md found at {skill_md.relative_to(REPO)}; "
+            "keep released skills under skills/<name>/",
+        )
+
+
 def check_marketplace(names: set[str], rep: Report) -> None:
     path = REPO / ".claude-plugin" / "marketplace.json"
     if not path.is_file():
@@ -266,6 +275,7 @@ def main() -> int:
     rep = Report()
     names = {n for d in dirs if (n := check_skill(d, rep))}
     if not args.paths:
+        check_distribution(rep)
         check_marketplace(names, rep)
 
     for w in rep.warnings:

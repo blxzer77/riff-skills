@@ -17,6 +17,10 @@ jobs:
         with:
           python-version: "3.12"
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
       - name: Install validators
         run: pip install pyyaml==6.0.3 skills-ref==0.1.1
 
@@ -43,3 +47,23 @@ jobs:
 
       - name: Eval scripts compile
         run: python -m py_compile skills/*/scripts/*.py scripts/*.py
+
+      - name: Generic skills CLI install smoke test
+        run: |
+          tmpdir="$(mktemp -d)"
+          trap 'rm -rf "$tmpdir"' EXIT
+          cd "$tmpdir"
+          npx --yes skills@1.7.6 add "$GITHUB_WORKSPACE" --all --copy --yes --json > install.json
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          workspace = Path(os.environ["GITHUB_WORKSPACE"])
+          installed = json.loads(Path("install.json").read_text(encoding="utf-8"))
+          expected = sorted(p.name for p in (workspace / "skills").iterdir() if p.is_dir())
+          actual = sorted(item["name"] for item in installed if item.get("status") == "installed")
+          assert actual == expected, (actual, expected)
+          assert all((Path(".agents/skills") / name / "SKILL.md").is_file() for name in expected)
+          assert not (Path(".agents/skills") / "template-skill").exists()
+          PY

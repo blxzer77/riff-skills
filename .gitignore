@@ -8,6 +8,10 @@ __pycache__/
 # Eval workspaces (contain skill snapshots; keep out of git and skill discovery)
 .workspace/
 
+# Generic agent install output
+.agents/
+agent/
+
 # Agent runtime state
 .claude/*.lock
 .claude/settings.local.json

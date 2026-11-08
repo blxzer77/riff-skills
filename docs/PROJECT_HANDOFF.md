@@ -1,6 +1,6 @@
 # riff-skills 项目交接
 
-> 交接日期：2026-10-30
+> 最后更新：2026-11-08
 > 当前分支：`main`
 > 用途：个人项目，不属于公司/BayDeer 工程规范仓库。
 
@@ -52,17 +52,33 @@ Skill 必须遵循 [Agent Skills specification](https://agentskills.io/specifica
 - `evals/evals.json`
 - `evals/trigger-queries.json`
 
-## 目录与校验
+## 目录、分发与校验
 
 ```text
-.claude-plugin/marketplace.json   # 可选的 Claude Code marketplace 入口
-skills/<name>/                     # 每个 skill 一个目录
+skills/<name>/                     # 唯一的可安装 skill 目录
+.agents/skills/                    # 通用 agent 的项目级安装目录（生成物，不提交）
+.claude-plugin/marketplace.json    # 可选的 Claude Code marketplace 入口
+template/SKILL.template.md         # skill 模板，不参与分发
 scripts/validate.py                # 仓库级校验
 sources/sdframe.yaml               # 上游素材到 skill 的裁剪映射
-template/SKILL.md                  # 最小模板
 docs/PROJECT_HANDOFF.md            # 本文件
 docs/EVALUATION_RESULTS.md         # 已完成评测和限制
 ```
+
+Git 仓库是 canonical source。通用安装和更新使用 `skills` CLI，Claude Code
+marketplace 只是适配层：
+
+```bash
+npx skills add blxzer77/riff-skills --all
+npx skills list
+npx skills check
+npx skills update
+npx skills add blxzer77/riff-skills --all --global
+```
+
+项目若生成 `skills-lock.json`，应提交它并审查更新；不要把 `.agents/skills/`
+或其他 agent 的安装目录提交进仓库。发布使用 `vMAJOR.MINOR.PATCH` Git tag，
+不为每个 agent 维护独立版本。
 
 每次改动后建议执行：
 
@@ -76,6 +92,7 @@ CI 位于 `.github/workflows/validate.yml`，同时调用：
 - `skills-ref==0.1.1` 的 Python API
 - `scripts/validate.py`
 - Python compile check
+- 通用 `skills` CLI 安装 smoke test
 
 `.workspace/` 是评测工作区，已经加入 `.gitignore`，不要提交。它里面有 skill snapshot、sandbox、transcript 和 benchmark 中间文件。
 
@@ -131,24 +148,24 @@ e519d0dd4d16be63b956fd35ab52fd6644840328
 
 ## 下一步顺序
 
-1. 在家拉取后先运行校验：
+1. 每次改动后运行：
 
    ```bash
-   git pull --ff-only origin main
    python3 scripts/validate.py --strict
+   python3 -m py_compile scripts/*.py skills/*/scripts/*.py skills/*/evals/checks/*.py
    ```
 
-2. 阅读本文件和 `docs/EVALUATION_RESULTS.md`，再阅读 `skills/evaluating-skills/SKILL.md`。
-3. 其余 skill 按 `reviewing-code` 的方法重做：先找 Anthropic / Claude Code 团队对应的官方材料并钉住版本，再对照重写正文；eval 用“必须做到 + 不能做的诱饵”配对 case，判定优先机械检查，check 先做 good / near-miss / empty 三态校验。
-4. 额度恢复后先补测 `designing-modules` 的 trigger（查询集已就绪），先用一次最小请求确认 API 不再返回 429。
-5. `selecting-technologies` 已重写，5 个 fixture case 和机械检查已校验（见 `docs/EVALUATION_RESULTS.md`），但还没跑过 agent。额度恢复后先只跑 baseline pilot（`--configs without_skill --runs 2`）确认 case 有区分度；baseline 全过的 case 换掉，再跑配对评测和 trigger。经验：契约写明时 baseline 往往也能做对，skill 的价值常在“约定没写明”的场景里。
-6. `reviewing-designs`、`writing-adrs`、`writing-tests` 的 trigger 查询已配好 fixture（查询里点名的设计文档、ADR、源文件都存在），额度恢复后重测，再判断 description 是否有问题；没有 treated run 时不评价正文质量。
-7. 修复前记录的 trigger 结果都可能失真（空 sandbox、`ls` 误判为加载），以重测结果为准。
-8. 改 skill 正文后用 `--baseline old_skill` 对比上一版；没有证明增量的改动如实标注，不要把方差当成效果。
-9. 如果新 fixture 仍无法产生稳定 skill-only 增益（同时考虑成本和严重风险），将 skill 标记为候选移除或合并，而不是继续加规则。
-10. 评测新 skill 前先跑静态检查，并确保 fixture、机械断言和 output eval 能区分 with/without；遇到 timeout 或 rate limit 时排除运行，不修改 skill。
-11. 如果安装到个人项目，优先复制对应的 `assets/agents-snippet.md` 到项目自己的 agent instruction file；skill 只在加载时生效，不能单独保证每次都触发。
-12. 不做 Pi、Codex、Nyan 或跨 agent/model 对比；如果以后改变评测政策，再单独更新本文件和评测结果说明。
+2. 用通用 CLI 做安装 smoke test，确认正式 skill 数量和名称与 `skills/` 一致，模板不会被安装：
+
+   ```bash
+   npx --yes skills@1.7.6 add . --all --copy --yes
+   ```
+
+3. 新增 skill 时只放在 `skills/<name>/`；模板、fixture 和评测快照不能暴露会被通用 CLI 发现的根 `SKILL.md`。
+4. 保持 README 的通用 CLI 安装、检查、更新和 lockfile 说明与 CLI 实际行为一致；CLI 升级时重新核对命令。
+5. 发布使用 `vMAJOR.MINOR.PATCH` Git tag；发布前检查所有 skill 都能从 Git 仓库安装，Claude marketplace 只作为附加入口维护。
+6. 项目依赖若生成 `skills-lock.json`，提交并审查它；不要提交 `.agents/skills/`、agent session、缓存或其他安装生成物。
+7. 暂不继续运行行为评测；若以后恢复评测政策，单独更新本文件和 `docs/EVALUATION_RESULTS.md`。
 
 ## 不要做的事
 
