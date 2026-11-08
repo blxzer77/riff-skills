@@ -41,9 +41,10 @@ will underperform), or **minor** (polish). Report file and line for each.
 
 ## Evals present
 
-- `evals/evals.json` has at least three cases, varied phrasing, at least one edge case.
-- `evals/trigger-queries.json` has 16–24 queries, roughly balanced, negatives are
-  near-misses, sets are assigned.
+- Repository `evals/<skill-name>/evals.json` has at least three cases, varied
+  phrasing, and at least one edge case.
+- Repository `evals/<skill-name>/trigger-queries.json` has 16–24 queries, roughly
+  balanced, negatives are near-misses, and sets are assigned.
 
 ## Report format
 

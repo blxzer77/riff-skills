@@ -16,16 +16,16 @@ without it (or than the previous version), and what that costs.
 
 ## Write cases
 
-Store cases in `<skill>/evals/evals.json`, using the eval-file schema documented in
-this skill's references.
+Store cases in the repository at `evals/<skill-name>/evals.json`, using the
+eval-file schema documented in this skill's references.
 
 - Start with three. Expand only after the first iteration shows what matters.
 - Write prompts the way the user actually writes: file paths, backstory, casual
   phrasing in one, precise phrasing in another.
 - Include one edge case: an ambiguous request, a case the skill should decline, or
   a situation where its default is wrong.
-- Prefer tasks with checkable artifacts. For code skills, ship a small fixture
-  project under `evals/files/` so the run produces a real diff.
+- Prefer tasks with checkable artifacts. For code skills, keep a small fixture
+  project under `evals/<skill-name>/files/` so the run produces a real diff.
 - Test the behavior the skill exists to cause, in prompts that do not ask for it.
   A testing skill is best measured on "fix this bug" or "add this feature", where
   the baseline skips tests, not on "write tests for X", where any capable agent
@@ -63,7 +63,7 @@ Write them after reading the first outputs, while the next runs execute.
   a Consequences section naming at least one downside".
 - Discriminating: it should be possible to fail. "The response mentions tests" is
   not; "the diff adds a test file exercising `apply_discount`" is.
-- Mechanical checks belong in scripts under `evals/checks/` (exit 0 = pass). Use
+- Mechanical checks belong in scripts under `evals/<skill-name>/checks/` (exit 0 = pass). Use
   them for anything a program can decide: a test fails before and passes after,
   a file parses, a section exists.
 - To check that tests the agent wrote are meaningful, run them against plausible

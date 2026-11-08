@@ -8,7 +8,8 @@ extensions are additive. All scripts in `scripts/` read and write exactly these 
 
 ## Authored files
 
-Both files live in `<skill>/evals/` and are committed with the skill.
+Both files live in the repository at `evals/<skill-name>/`; they are development
+artifacts and are not installed with the skill.
 
 ### evals.json
 
@@ -21,13 +22,13 @@ Both files live in `<skill>/evals/` and are committed with the skill.
       "name": "regression-test-for-bug",
       "prompt": "Realistic user message, with paths and context.",
       "expected_output": "Human-readable description of success.",
-      "files": ["evals/files/cart-service"],
+      "files": ["files/cart-service"],
       "assertions": [
         {"id": "names-protected-behavior", "text": "The response names the behavior the new test protects"},
         {
           "id": "fails-before-fix",
           "text": "The new test fails against the original code",
-          "script": "evals/checks/fails_before_fix.py"
+          "script": "checks/fails_before_fix.py"
         }
       ]
     }
@@ -55,7 +56,7 @@ directory and these environment variables:
 
 An optional `args` list on a script assertion is passed to the script as
 command-line arguments, so one check can serve several assertions, for example
-`{"id": "reports-bug", "text": "...", "script": "evals/checks/finding_reported.py",
+`{"id": "reports-bug", "text": "...", "script": "checks/finding_reported.py",
 "args": ["src/app.py", "10", "14"]}`. This is a repository extension; the Agent
 Skills guide does not define it.
 

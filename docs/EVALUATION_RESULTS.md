@@ -92,7 +92,8 @@ after common training data, or on constraints written only in repository files:
 | background-email | compose and README: one VM, only Postgres backed up, nobody on call | no new broker or stateful service; mail off the request path; tests pass |
 | reuse-http (decoy) | httpx already in use | no new dependency or decision document; function works with the given client |
 
-Ageing facts are read from dated snapshots under `evals/checks/data/` so a grade
+Ageing facts are read from dated snapshots under
+`evals/selecting-technologies/checks/data/` so a grade
 does not change with the day it runs. Tests and probes run in a network-less
 namespace, so a test that calls a live API fails. Each check was validated on
 hand-written good solutions (including the standard library's scrypt and PBKDF2,

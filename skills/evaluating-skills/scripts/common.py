@@ -128,8 +128,20 @@ def eval_dirname(ev: dict) -> str:
     return f"eval-{ev.get('name') or ev['id']}"
 
 
+def evals_dir(skill_dir: Path) -> Path:
+    skill_dir = Path(skill_dir).resolve()
+    candidates = [
+        Path.cwd().resolve() / "evals" / skill_dir.name,
+        skill_dir.parent.parent / "evals" / skill_dir.name,
+    ]
+    for candidate in candidates:
+        if candidate.is_dir():
+            return candidate
+    return candidates[0]
+
+
 def load_evals(skill_dir: Path) -> list[dict]:
-    path = Path(skill_dir) / "evals" / "evals.json"
+    path = evals_dir(skill_dir) / "evals.json"
     if not path.is_file():
         raise HarnessError(f"missing {path}")
     data = read_json(path)

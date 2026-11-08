@@ -2,10 +2,11 @@
 """Measure how often a skill's description makes the agent load the skill.
 
 Each query runs `--runs` times in a fresh sandbox where only this skill is
-installed. The sandbox is empty unless the query names a `fixture` directory inside
-the skill; use one when the request only makes sense with something to act on, such
-as a staged change to review. A run counts as triggered when the agent loads the
-skill (see references/agents.md). Streaming adapters stop as soon as that is known.
+installed. The sandbox is empty unless the query names a `fixture` directory under
+the repository's `evals/<skill-name>/` directory; use one when the request only
+makes sense with something to act on, such as a staged change to review. A run
+counts as triggered when the agent loads the skill (see references/agents.md).
+Streaming adapters stop as soon as that is known.
 
 Example:
     run_triggers.py --skill skills/writing-tests --agent pi --set train
@@ -24,7 +25,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from agents import add_agent_args, adapter_from_args, execute
-from common import HarnessError, die, read_frontmatter, read_json, replace_description, write_json
+from common import (HarnessError, die, evals_dir, read_frontmatter, read_json,
+                    replace_description, write_json)
 from sandbox import DEFAULT_ROOT, sandbox
 
 
@@ -59,7 +61,7 @@ def main() -> int:
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--skill", required=True, type=Path, help="skill directory")
     parser.add_argument("--queries", type=Path,
-                        help="default: <skill>/evals/trigger-queries.json")
+                        help="default: evals/<skill-name>/trigger-queries.json")
     parser.add_argument("--set", choices=["train", "validation", "all"], default="train")
     parser.add_argument("--description-file", type=Path,
                         help="test this description instead of the one in SKILL.md")
@@ -80,7 +82,8 @@ def main() -> int:
     except HarnessError as exc:
         die(str(exc))
     name = meta.get("name") or skill_dir.name
-    queries_path = args.queries or skill_dir / "evals" / "trigger-queries.json"
+    eval_root = evals_dir(skill_dir)
+    queries_path = args.queries or eval_root / "trigger-queries.json"
     if not queries_path.is_file():
         die(f"missing {queries_path}")
     queries = read_json(queries_path)
@@ -91,12 +94,13 @@ def main() -> int:
         queries = [q for q in queries if q["set"] == args.set]
     if not queries:
         die(f"no queries in set '{args.set}'")
+    fixture_root = eval_root if args.queries is None else queries_path.resolve().parent
     for q in queries:
         rel = q.get("fixture")
         if rel is not None:
-            path = (skill_dir / rel).resolve()
-            if skill_dir not in path.parents or not path.is_dir():
-                die(f"query fixture must be a directory inside the skill: {rel!r}")
+            path = (fixture_root / rel).resolve()
+            if fixture_root not in path.parents or not path.is_dir():
+                die(f"query fixture must be a directory inside the eval directory: {rel!r}")
             q["_fixture"] = path
 
     description = meta.get("description", "")

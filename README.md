@@ -108,8 +108,8 @@ snippet (where provided) into your project's `AGENTS.md`.
 ## Contributing
 
 Read [AGENTS.md](AGENTS.md). In short: start from
-`template/SKILL.template.md`, follow `skills/authoring-skills`, ship evals, and run
-`python3 scripts/validate.py --strict` before listing a skill. Use
+`template/SKILL.template.md`, follow `skills/authoring-skills`, keep evals under
+`evals/<name>/`, and run `python3 scripts/validate.py --strict` before listing a skill. Use
 `skills/evaluating-skills` for behavioral benchmarks when that work is explicitly
 resumed; installation and cross-agent compatibility are the release gate.
 

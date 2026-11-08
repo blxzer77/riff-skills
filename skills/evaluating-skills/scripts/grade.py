@@ -21,8 +21,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 from agents import add_agent_args, adapter_from_args, get_adapter
-from common import (HarnessError, die, eval_dirname, load_evals, normalize_assertions,
-                    read_json, truncate, write_json)
+from common import (HarnessError, die, eval_dirname, evals_dir, load_evals,
+                    normalize_assertions, read_json, truncate, write_json)
 
 LIMIT = 60_000
 SCRIPT_TIMEOUT = 300
@@ -31,7 +31,7 @@ DEFAULT_GRADER = Path(__file__).resolve().parent.parent / "references" / "grader
 
 
 def run_script(spec: dict, skill_dir: Path, run_dir: Path, fixture: Path) -> dict:
-    script = (skill_dir / spec["script"]).resolve()
+    script = (evals_dir(skill_dir) / spec["script"]).resolve()
     if not script.is_file():
         return {"id": spec["id"], "text": spec["text"], "passed": False, "method": "script",
                 "evidence": f"script not found: {spec['script']}"}
@@ -223,7 +223,7 @@ def main() -> int:
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--iteration", required=True, type=Path, help="iteration-N directory")
     parser.add_argument("--skill", required=True, type=Path,
-                        help="skill whose evals/evals.json holds the assertions")
+                        help="skill whose evals/<skill-name>/evals.json holds the assertions")
     parser.add_argument("--only-scripts", action="store_true",
                         help="grade script assertions only (skip LLM-graded ones)")
     parser.add_argument("--grader-instructions", type=Path, default=DEFAULT_GRADER,

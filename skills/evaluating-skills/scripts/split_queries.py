@@ -6,7 +6,7 @@ Only entries without a `set` are assigned; existing assignments are kept unless
 across optimization iterations. The file is rewritten in place, order preserved.
 
 Example:
-    split_queries.py skills/writing-tests/evals/trigger-queries.json
+    split_queries.py evals/writing-tests/trigger-queries.json
 """
 
 from __future__ import annotations

@@ -28,9 +28,10 @@ stable project rule rather than reusable skill behavior.
 - [ ] **Gather material.** Real artifacts beat general knowledge: the user's
       corrections, project conventions, failure cases, primary sources. Content the
       agent already knows is cost without benefit.
-- [ ] **Write eval cases first.** Three realistic prompts in `evals/evals.json` and a
-      draft `evals/trigger-queries.json` (see the evaluating-skills skill). They keep
-      the draft honest.
+- [ ] **Write eval cases first.** In this repository, put three realistic prompts in
+      `evals/<skill-name>/evals.json` and a draft `evals/<skill-name>/trigger-queries.json`
+      (see the evaluating-skills skill). They keep the draft honest and stay out of
+      the installed skill.
 - [ ] **Draft** using `assets/SKILL.template.md` and the rules below.
 - [ ] **Validate** with the repository validator, if present, and fix every error.
 - [ ] **Evaluate** with the evaluating-skills skill; revise from evidence.
@@ -97,12 +98,17 @@ situations, including ones where the user never names the domain>. Not for
 ## Files
 
 ```
-<name>/
+skills/<name>/
 ├── SKILL.md
 ├── references/   # read on demand; one level deep; contents list if > 100 lines
 ├── scripts/      # executed, not read; --help, structured output, clear errors
-├── assets/       # templates and files copied into outputs
-└── evals/        # evals.json, trigger-queries.json, files/, checks/
+└── assets/       # templates and files copied into outputs
+
+evals/<name>/
+├── evals.json
+├── trigger-queries.json
+├── files/        # fixtures
+└── checks/       # mechanical assertions
 ```
 
 - Reference files from `SKILL.md` with relative paths; never chain references

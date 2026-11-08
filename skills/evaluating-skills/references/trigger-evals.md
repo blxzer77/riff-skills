@@ -11,8 +11,8 @@ description alone decides whether the skill is ever used.
 
 ## Write the query set
 
-Store it in `<skill>/evals/trigger-queries.json`, using the trigger-query schema
-documented in this skill's references.
+Store it in the repository at `evals/<skill-name>/trigger-queries.json`, using the
+trigger-query schema documented in this skill's references.
 
 - About 20 queries: 8–12 should trigger, 8–12 should not.
 - Should-trigger queries vary phrasing (casual, terse, with typos), explicitness
@@ -28,8 +28,8 @@ documented in this skill's references.
 - Give queries something to act on when the skill needs input. "Review my staged
   changes" in an empty repository is answered with "nothing to review" before any
   skill is considered, so it measures the sandbox, not the description. Set a
-  `fixture` on such queries: a directory in the skill with the files, and optionally
-  a `setup.sh` that creates branches or staged changes. Use the same fixture for the
+  `fixture` on such queries: a directory under `evals/<skill-name>/files/` with the
+  files, and optionally a `setup.sh` that creates branches or staged changes. Use the same fixture for the
   near-miss negatives so both labels face the same environment.
 - Assign sets once: `python3 scripts/split_queries.py <file>` (60/40, stratified).
 

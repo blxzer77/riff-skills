@@ -26,15 +26,16 @@ two versions need a holistic comparison.
 
 ## Workflow
 
-- [ ] Read the skill: `SKILL.md`, its references, and `evals/` if present.
+- [ ] Read the skill: `SKILL.md`, its references, and the repository's
+      `evals/<skill-name>/` directory if present.
 - [ ] Layer 1: run the repository validator if there is one, then review against
       `references/static-review.md`. Fix critical findings before spending runs.
 - [ ] Pick the agent(s) and model(s) the skill must serve. Read
       `references/agents.md` for the supported adapters and isolation caveats.
-- [ ] Ensure `evals/evals.json` exists (≥ 3 cases). Draft missing cases with the user;
-      their real tasks make better cases than invented ones.
-- [ ] Layer 2: ensure `evals/trigger-queries.json` exists, measure, optimize if
-      needed. Treat routing and skill-body quality as separate questions. A simple
+- [ ] Ensure `evals/<skill-name>/evals.json` exists (≥ 3 cases). Draft missing cases
+      with the user; their real tasks make better cases than invented ones.
+- [ ] Layer 2: ensure `evals/<skill-name>/trigger-queries.json` exists, measure,
+      optimize if needed. Treat routing and skill-body quality as separate questions. A simple
       task may not invoke a useful skill; that alone is not a description failure.
 - [ ] Layer 3: run, grade, aggregate, review with the user, iterate. Prompts must
       not reveal the behavior being tested. Prefer artifact-based assertions, and

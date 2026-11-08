@@ -22,8 +22,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 from agents import add_agent_args, adapter_from_args, execute
-from common import (HarnessError, die, eval_dirname, is_within, load_evals,
-                    normalize_assertions, skill_name, utc_now, write_json)
+from common import (HarnessError, die, eval_dirname, evals_dir, is_within,
+                    load_evals, normalize_assertions, skill_name, utc_now, write_json)
 from sandbox import DEFAULT_ROOT, copy_fixture, diff_against_fixture, sandbox
 
 RETRY_BACKOFF_SECONDS = 30
@@ -194,7 +194,7 @@ def main() -> int:
             fixture = eval_dir / "fixture"
             if fixture.exists():
                 shutil.rmtree(fixture)
-            copy_fixture(skill_dir, ev.get("files", []), fixture)
+            copy_fixture(evals_dir(skill_dir), ev.get("files", []), fixture)
             write_json(eval_dir / "eval_metadata.json", {
                 "id": ev["id"], "name": ev.get("name") or str(ev["id"]), "prompt": ev["prompt"],
                 "expected_output": ev["expected_output"],

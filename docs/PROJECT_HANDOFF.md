@@ -49,13 +49,14 @@ Skill 必须遵循 [Agent Skills specification](https://agentskills.io/specifica
 - `SKILL.md`
 - 按需加载的 `references/`
 - 可复制到项目 `AGENTS.md` 的 `assets/agents-snippet.md`
-- `evals/evals.json`
-- `evals/trigger-queries.json`
+- `evals/<name>/evals.json`（仓库开发材料，不随 skill 安装）
+- `evals/<name>/trigger-queries.json`（仓库开发材料，不随 skill 安装）
 
 ## 目录、分发与校验
 
 ```text
 skills/<name>/                     # 唯一的可安装 skill 目录
+evals/<name>/                      # 评测、fixture、checks（不随 skill 安装）
 .agents/skills/                    # 通用 agent 的项目级安装目录（生成物，不提交）
 .claude-plugin/marketplace.json    # 可选的 Claude Code marketplace 入口
 template/SKILL.template.md         # skill 模板，不参与分发
@@ -84,7 +85,7 @@ npx skills add blxzer77/riff-skills --all --global
 
 ```bash
 python3 scripts/validate.py --strict
-python3 -m py_compile scripts/*.py skills/*/scripts/*.py skills/*/evals/checks/*.py
+python3 -m py_compile scripts/*.py skills/*/scripts/*.py evals/*/checks/*.py
 ```
 
 CI 位于 `.github/workflows/validate.yml`，同时调用：
@@ -156,7 +157,7 @@ e519d0dd4d16be63b956fd35ab52fd6644840328
 
    ```bash
    python3 scripts/validate.py --strict
-   python3 -m py_compile scripts/*.py skills/*/scripts/*.py skills/*/evals/checks/*.py
+   python3 -m py_compile scripts/*.py skills/*/scripts/*.py evals/*/checks/*.py
    ```
 
 2. 用通用 CLI 做安装 smoke test，确认正式 skill 数量和名称与 `skills/` 一致，模板不会被安装：

@@ -191,46 +191,50 @@ def check_references(skill_dir: Path, where: str, rep: Report) -> None:
 
 
 def check_evals(skill_dir: Path, where: str, name: str | None, rep: Report) -> None:
-    evals = skill_dir / "evals" / "evals.json"
+    eval_name = name or skill_dir.name
+    eval_root = REPO / "evals" / eval_name
+    evals = eval_root / "evals.json"
+    eval_label = f"evals/{eval_name}/evals.json"
     if not evals.is_file():
-        rep.warn(where, "no evals/evals.json")
+        rep.warn(where, f"no {eval_label}")
     else:
         try:
             data = json.loads(evals.read_text(encoding="utf-8"))
         except json.JSONDecodeError as exc:
-            rep.error(f"{where}/evals/evals.json", f"invalid JSON: {exc}")
+            rep.error(f"{where}/{eval_label}", f"invalid JSON: {exc}")
         else:
             if name and data.get("skill_name") != name:
-                rep.error(f"{where}/evals/evals.json", "skill_name must equal the skill name")
+                rep.error(f"{where}/{eval_label}", "skill_name must equal the skill name")
             cases = data.get("evals", [])
             if len(cases) < 3:
                 rep.warn(where, f"evals.json has {len(cases)} case(s); aim for at least 3")
             ids = [c.get("id") for c in cases]
             if len(ids) != len(set(ids)):
-                rep.error(f"{where}/evals/evals.json", "duplicate eval ids")
+                rep.error(f"{where}/{eval_label}", "duplicate eval ids")
             for c in cases:
                 for key in ("id", "prompt", "expected_output"):
                     if key not in c:
-                        rep.error(f"{where}/evals/evals.json", f"eval {c.get('id')} missing '{key}'")
+                        rep.error(f"{where}/{eval_label}", f"eval {c.get('id')} missing '{key}'")
                 for f in c.get("files", []):
-                    if not (skill_dir / f).exists():
-                        rep.error(f"{where}/evals/evals.json", f"eval {c.get('id')} file not found: {f}")
+                    if not (eval_root / f).exists():
+                        rep.error(f"{where}/{eval_label}", f"eval {c.get('id')} file not found: {f}")
                 for a in c.get("assertions", []):
-                    if isinstance(a, dict) and "script" in a and not (skill_dir / a["script"]).is_file():
-                        rep.error(f"{where}/evals/evals.json", f"assertion script not found: {a['script']}")
-    queries = skill_dir / "evals" / "trigger-queries.json"
+                    if isinstance(a, dict) and "script" in a and not (eval_root / a["script"]).is_file():
+                        rep.error(f"{where}/{eval_label}", f"assertion script not found: {a['script']}")
+    queries = eval_root / "trigger-queries.json"
+    query_label = f"evals/{eval_name}/trigger-queries.json"
     if not queries.is_file():
-        rep.warn(where, "no evals/trigger-queries.json")
+        rep.warn(where, f"no {query_label}")
         return
     try:
         qs = json.loads(queries.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
-        rep.error(f"{where}/evals/trigger-queries.json", f"invalid JSON: {exc}")
+        rep.error(f"{where}/{query_label}", f"invalid JSON: {exc}")
         return
     pos = sum(1 for q in qs if q.get("should_trigger") is True)
     neg = sum(1 for q in qs if q.get("should_trigger") is False)
     if pos + neg != len(qs):
-        rep.error(f"{where}/evals/trigger-queries.json", "every query needs a boolean should_trigger")
+        rep.error(f"{where}/{query_label}", "every query needs a boolean should_trigger")
     if pos < 5 or neg < 5:
         rep.warn(where, f"trigger-queries.json has {pos} positive / {neg} negative; aim for 8-12 each")
     if any(q.get("set") not in ("train", "validation") for q in qs):
@@ -238,12 +242,24 @@ def check_evals(skill_dir: Path, where: str, name: str | None, rep: Report) -> N
 
 
 def check_distribution(rep: Report) -> None:
-    for skill_md in sorted(REPO.glob("*/SKILL.md")):
-        rep.error(
-            "distribution",
-            f"non-installable root SKILL.md found at {skill_md.relative_to(REPO)}; "
-            "keep released skills under skills/<name>/",
-        )
+    ignored = {".git", ".workspace", ".agents", "agent", "node_modules"}
+    for skill_md in sorted(REPO.rglob("SKILL.md")):
+        relative = skill_md.relative_to(REPO)
+        if ignored.intersection(relative.parts):
+            continue
+        if relative.parts[:1] != ("skills",) or len(relative.parts) != 3:
+            rep.error(
+                "distribution",
+                f"non-installable SKILL.md found at {relative}; "
+                "keep released skills at skills/<name>/SKILL.md and rename fixtures",
+            )
+    for eval_dir in sorted((REPO / "skills").glob("*/evals")):
+        if eval_dir.is_dir():
+            rep.error(
+                "distribution",
+                f"evaluation files are inside an installable skill: {eval_dir.relative_to(REPO)}; "
+                "move them under evals/<skill-name>/",
+            )
 
 
 def check_marketplace(names: set[str], rep: Report) -> None:

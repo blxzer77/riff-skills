@@ -8,7 +8,7 @@ in any spec-compliant agent; no skill may depend on one vendor's client.
 ## Layout
 
 - `skills/<name>/` — one skill per directory; `name` in `SKILL.md` equals the directory name.
-- `skills/<name>/evals/` — `evals.json` (output cases) and `trigger-queries.json`.
+- `evals/<name>/` — development-only output cases, trigger queries, fixtures, and checks.
 - `template/SKILL.template.md` — starting point for a new skill; it is not installable.
 - `scripts/validate.py` — repository validator; CI runs it on every push.
 - `sources/` — curation maps from upstream material to skills, with the pinned commit.
@@ -20,8 +20,8 @@ in any spec-compliant agent; no skill may depend on one vendor's client.
   `.agents/skills/` are the primary install path; Claude Code marketplace metadata
   is an optional adapter, never a requirement.
 - Only directories under `skills/` are installable. Templates, fixtures, and other
-  repository material must not expose a root `SKILL.md` that a generic installer
-  could mistake for a released skill.
+  repository material must not expose another file named `SKILL.md` that a generic
+  installer could mistake for a released skill; use fixture-specific names instead.
 - Releases use Git tags in `vMAJOR.MINOR.PATCH` form. A tag identifies a repository
   snapshot; per-project `skills-lock.json` files pin the installed snapshot.
 - Author skills with `skills/authoring-skills/SKILL.md`; evaluate them with
@@ -29,8 +29,9 @@ in any spec-compliant agent; no skill may depend on one vendor's client.
 - Frontmatter uses only `name`, `description`, `license`, `compatibility`, `metadata`.
 - No vendor-specific tool names, environment variables, slash commands, or paths in
   skill bodies. Where a capability may be missing, describe both branches.
-- Every skill ships `evals/evals.json` (≥ 3 cases) and `evals/trigger-queries.json`
-  before it is released; listing it in the Claude Code marketplace is optional.
+- Every skill has `evals/<name>/evals.json` (≥ 3 cases) and
+  `evals/<name>/trigger-queries.json` before it is released; evals are repository
+  development material and are not installed with the skill.
 - Upstream material (see `sources/`) is input, not content: rewrite, verify against
   primary sources, and drop claims that cannot be verified.
 - Facts that age (versions, "current" practice) carry a verified-on date or tell the

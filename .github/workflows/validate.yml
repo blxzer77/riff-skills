@@ -46,7 +46,7 @@ jobs:
         run: python scripts/validate.py
 
       - name: Eval scripts compile
-        run: python -m py_compile skills/*/scripts/*.py scripts/*.py
+        run: python -m py_compile skills/*/scripts/*.py scripts/*.py evals/*/checks/*.py
 
       - name: Generic skills CLI install smoke test
         run: |
@@ -65,5 +65,6 @@ jobs:
           actual = sorted(item["name"] for item in installed if item.get("status") == "installed")
           assert actual == expected, (actual, expected)
           assert all((Path(".agents/skills") / name / "SKILL.md").is_file() for name in expected)
+          assert not any((Path(".agents/skills") / name / "evals").exists() for name in expected)
           assert not (Path(".agents/skills") / "template-skill").exists()
           PY
