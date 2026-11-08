@@ -1,8 +1,8 @@
 ## Design review
 
-Before implementing a non-trivial architecture or API change, review the proposal
-against the actual repository. It should state goals, non-goals, alternatives, tradeoffs,
-module/data boundaries, failure and rollback behavior, tests, and a revisit trigger.
-Prefer the smallest design that meets proven requirements; record costly-to-reverse
-choices in an ADR. High-confidence review findings include location, impact, evidence,
-and the smallest fix.
+Before building a non-trivial design, check its load-bearing claims against the
+repository: how the app actually runs (processes, schedulers, hosts), who owns the
+data it touches, which fields and endpoints callers outside the change depend on,
+and the accepted decision records. Report only findings you can tie to both the
+design's text and a project file; skip taste, preferred patterns, and speculative
+scale. End with one verdict: approve, approve with changes, or do not approve.

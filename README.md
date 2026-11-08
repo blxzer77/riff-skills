@@ -81,14 +81,19 @@ agent. The shared standard locations are:
 
 The copied directory must retain `SKILL.md` at its root. Agents with a different
 standard location may be given the same directory through their own configuration.
+Copying or symlinking a local checkout does not provide automatic updates; use the
+CLI when updates matter.
 
 ### Claude Code marketplace (optional)
 
-Claude Code can also add this repository as a plugin marketplace:
+Claude Code can also add this repository as a plugin marketplace. Refresh the
+marketplace catalog before installing an updated plugin, then update or reinstall
+it from the `/plugin` menu:
 
 ```
 /plugin marketplace add blxzer77/riff-skills
 /plugin install riff-skills@riff-skills
+/plugin marketplace update riff-skills
 ```
 
 This is an alternative Claude Code integration, not a prerequisite for using the

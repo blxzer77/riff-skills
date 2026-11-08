@@ -41,7 +41,10 @@ python3 scripts/run_triggers.py --skill <skill-dir> --agent <agent> --set all --
 
 A query's trigger rate is the fraction of completed, non-error runs in which the
 agent loaded the skill. Report errors and early-stopped streaming runs separately;
-trigger results do not establish task completion or full-run cost.
+trigger results do not establish task completion or full-run cost. A run that ends
+because the agent asked the user a question is not an error: a non-interactive run
+cannot answer, but the agent had already chosen whether to load the skill, so the
+run counts.
 Use 0.5 as a starting decision threshold for balanced exploratory runs:
 should-trigger queries pass at or above it, and should-not-trigger queries pass
 below it. It is not a universal quality target. Report raw counts, rates, and

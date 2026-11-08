@@ -1,8 +1,121 @@
 {
   "skill_name": "reviewing-designs",
   "evals": [
-    {"id": 1, "name": "overbuilt-small-project", "prompt": "Review this proposal for our small one-instance photo app: split it into 12 microservices, add a service mesh, event bus, CQRS, and a separate database per service. The only stated requirement is to let two developers ship faster.", "expected_output": "Flags disproportionate complexity, missing evidence, operational costs, and lack of goals/non-goals; recommends a simpler modular monolith or asks for scaling/ownership evidence.", "assertions":["The review connects the proposed complexity to the actual one-instance/two-developer context","At least one concrete operational or failure cost is cited","The recommendation is one simpler path rather than an equal menu"]},
-    {"id": 2, "name": "api-design-missing-rollback", "prompt": "Review this design: rename the public `email` field to `contact` in the next release and update all clients later. There is no compatibility window or rollback plan.", "expected_output": "Reports a high-confidence breaking contract finding, explains affected clients, and recommends an additive expand/migrate/contract path or versioned transition with tests.", "assertions":["The breaking public contract is reported with high severity","The recommendation includes a compatibility or migration path","The review asks how rollback and old clients are handled"]},
-    {"id": 3, "name": "good-design-no-false-positives", "prompt": "Review this design for a three-person app: keep one deployable, split code by business capability, each module owns its tables, HTTP handlers call use cases, and an integration test verifies the checkout flow. Goals and non-goals are listed; alternatives are documented.", "expected_output": "Does not invent blockers; acknowledges strengths and reports no blocking findings or only evidence-based questions.", "assertions":["The review does not call modularity or one deployable an architectural flaw without evidence","The report acknowledges explicit goals, alternatives, and integration coverage","The verdict is approve or approve with changes, not reject"]}
+    {
+      "id": 1,
+      "name": "donor-report",
+      "prompt": "Mia wrote docs/proposals/donor-report.md. Is it good to go?",
+      "expected_output": "Finds that the report's single SQL query reads inventory's tables (stock_moves, inventory_items) directly from a new reports module, which accepted ADR 0002 forbids: other modules go through app/inventory/api.py, which already has received_between, and app/donors/api.py (donations_between). Recommends approve with changes: compose the report from those two functions. Does not object to the cron line, the /backups path (mounted in compose), the csv module, or performance at this data size.",
+      "files": [
+        "evals/files/donor-report"
+      ],
+      "assertions": [
+        {
+          "id": "adr-cited",
+          "text": "The review names accepted ADR 0002 (each module owns its tables) or the inventory/donors api.py functions the report must use",
+          "script": "evals/checks/fact_cited.py",
+          "args": [
+            "(0002|\\badr[- ]?0*2\\b|module[- ]data[- ]ownership|owns? (its|their) (own )?tables|data ownership|received_between|donations_between|inventory[/.]api|donors[/.]api)"
+          ]
+        },
+        {
+          "id": "verdict-not-approve",
+          "text": "The overall verdict is not an unconditional approval, because the query bypasses the inventory module's public functions"
+        },
+        {
+          "id": "no-decoy-demand",
+          "text": "The review does not require changing the cron line or the /backups output path, replacing the csv module, or adding indexes, caching, pandas, or a BI tool. Other real defects it finds in the query do not affect this assertion"
+        },
+        {
+          "id": "tree-unchanged",
+          "text": "The project is left unchanged",
+          "script": "evals/checks/review_unchanged.py"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "pickup-reminders",
+      "prompt": "Please review docs/proposals/pickup-reminders.md \u2014 we'd like to start on it this week.",
+      "expected_output": "Approves. The design fits the project: it lives in the households module, which owns pickups and households (ADR 0002); pickups.reminded_at already exists; slot_start is ISO 8601 UTC (app/households/pickups.py) and the bounds use the same form; errors are handled per pickup; host cron with flock follows deploy/crontab; it avoids a web-app thread because gunicorn runs four workers; duplicate reminders after a crash or failed update are an explicitly accepted trade-off; there is a dry run, a mock-based test plan on a schema-built database, and a rollback. Optional suggestions are fine but nothing blocks.",
+      "files": [
+        "evals/files/pickup-reminders"
+      ],
+      "assertions": [
+        {
+          "id": "verdict-approve",
+          "text": "The review's overall conclusion is that the design can be built as proposed: it approves, or says nothing blocks. Implementation tips, optional notes, or questions do not fail this; it fails when the review says the design or the document must change before building, or withholds approval pending answers"
+        },
+        {
+          "id": "accepted-tradeoff-respected",
+          "text": "The review does not present duplicate reminders after a crash or failed update as a defect that must be fixed; the proposal states and accepts that trade-off"
+        },
+        {
+          "id": "no-new-service-demand",
+          "text": "The review does not require a queue, broker, scheduler service, or background worker process"
+        },
+        {
+          "id": "tree-unchanged",
+          "text": "The project is left unchanged",
+          "script": "evals/checks/review_unchanged.py"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "stock-search",
+      "prompt": "Ken wants to add search to the stock page \u2014 docs/proposals/stock-search.md. Thoughts before he builds it?",
+      "expected_output": "Approves. The design is proportionate: a parameterized LIKE in inventory's own api.py keeps ADR 0001 (SQLite) and ADR 0002 (module owns its tables); 400 rows need no index or FTS; escaping % and _ is in the test plan; the view is behind login like the rest of /inventory. Optional notes are fine. Does not ask for Elasticsearch, Postgres, FTS5, or an index as a condition, and does not raise speculative scale.",
+      "files": [
+        "evals/files/stock-search"
+      ],
+      "assertions": [
+        {
+          "id": "verdict-approve",
+          "text": "The review's overall conclusion is that the design can be built as proposed: it approves, or says nothing blocks. Implementation tips, optional notes, or questions do not fail this; it fails when the review says the design or the document must change before building, or withholds approval pending answers"
+        },
+        {
+          "id": "no-scale-demand",
+          "text": "The review does not require full-text search, an index, a search service, or a different database, and does not treat growth far beyond 400 items as a problem this design must solve"
+        },
+        {
+          "id": "tree-unchanged",
+          "text": "The project is left unchanged",
+          "script": "evals/checks/review_unchanged.py"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "stock-import",
+      "prompt": "Mia's proposal docs/proposals/stock-import.md \u2014 is this ready to build?",
+      "expected_output": "Finds that step 2 inserts stock_moves rows with kind = 'import', but app/schema.sql restricts stock_moves.kind with CHECK (kind IN ('donation', 'pickup', 'adjustment')), so every insert fails and, because the import is one transaction, nothing is ever applied. Recommends using kind 'adjustment' or a schema migration that adds 'import'. Does not approve unconditionally. Does not object to the csv module, running in the request for 400 rows, or the lack of a background job.",
+      "files": [
+        "evals/files/stock-import"
+      ],
+      "assertions": [
+        {
+          "id": "check-constraint-cited",
+          "text": "The review says kind = 'import' is rejected by the CHECK constraint on stock_moves.kind in app/schema.sql",
+          "script": "evals/checks/fact_cited.py",
+          "args": [
+            "(check constraint|constraint (on|for) (stock_moves\\.)?kind|kind\\s+IN\\s*\\(|allowed (kinds?|values)|only (allows?|permits?|accepts?) [^.\\n]{0,40}(donation|adjustment)|'?import'?[^.\\n]{0,60}(not (allowed|permitted|a valid|one of|in the)|isn'?t (allowed|permitted|valid|one of)|rejected|invalid (kind|value)|violat)|(rejects?|IntegrityError)[^.\\n]{0,40}'?import'?|'?import'?[^.\\n]{0,60}IntegrityError)"
+          ]
+        },
+        {
+          "id": "verdict-not-approve",
+          "text": "The overall verdict is not an unconditional approval, because the import insert violates the schema"
+        },
+        {
+          "id": "no-decoy-demand",
+          "text": "The review does not require pandas, a background job or queue, or moving the import out of the request as a condition of approval"
+        },
+        {
+          "id": "tree-unchanged",
+          "text": "The project is left unchanged",
+          "script": "evals/checks/review_unchanged.py"
+        }
+      ]
+    }
   ]
 }

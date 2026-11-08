@@ -7,8 +7,71 @@
 >
 > Current policy (2026-10-31): run new evaluations only with local cometix and
 > `deepseek-flash`; do not compare these results directly with the historical Pi run.
+>
+> Model change (2026-11-02): `deepseek-flash` hit its monthly cap, so runs on that
+> day used `claude-haiku-5-5` (same cometix agent, same bwrap sandbox). Later the
+> same day `deepseek-flash` recovered and is the evaluation model again. Results on
+> different models are not comparable; each section says which model it used, and
+> description and body decisions are made on `deepseek-flash`. The proxy later returned
+HTTP 500 `empty response content` for a minimal deepseek request; no new run is
+valid until a minimal probe returns 200 again.
 
-## `selecting-technologies` redesign (2026-11-02, not yet run)
+## `reviewing-designs` redesign (2026-11-02, `claude-haiku-5-5`)
+
+The body was rewritten from the Anthropic review designs listed in its
+`references/sources.md` (architecture-critic, code-review, code-reviewer agents,
+scan-verifier, and Claude Code's explore-then-plan and adversarial-review
+guidance). Changes:
+
+- Read the project before trusting the proposal.
+- Check each claim the design depends on against repository files.
+- Try to refute a finding before reporting it.
+- Keep a design-specific false-positive list: taste, preferred technology,
+  speculative scale, re-arguing accepted ADRs, and accepted trade-offs.
+- Derive one verdict from severity.
+
+The 80/100 confidence threshold comes from Anthropic's code reviewers. Applying it
+to designs is this project's choice. The section checklist, the "require an
+alternative" gate, and the confidence-to-severity bands had no source and were
+dropped.
+
+The old three cases had no fixture and named the defect in the prompt. The new
+cases share one small project, and no prompt names the issue:
+
+| Case | Hidden fact | Expected |
+|---|---|---|
+| donor-report | the query bypasses module APIs, contradicting accepted ADR 0002 | not approve, cites the ADR or APIs |
+| stock-import | `kind = 'import'` violates the `CHECK` constraint in `app/schema.sql` | not approve, cites the constraint |
+| pickup-reminders | sound design with a stated, accepted trade-off | approve |
+| stock-search | sound design, small catalogue | approve |
+
+Two further cases (a field rename and remember-me login) were dropped because the
+baseline passed them completely in the pilot.
+
+Final paired run, 3 runs each, 12/12 with-skill runs treated:
+
+- Pass rate: 0.98 with the skill, 0.83 without.
+- Both configurations found both hidden defects in 6/6 runs.
+- The difference is all in sound designs: with the skill, 5/6 runs approved;
+  without it, 0/6. The baseline withheld approval over things the proposals had
+  already settled.
+- The one with-skill miss is defensible: the crontab has no `MAILTO`, so the
+  proposal's alerting claim is unverified.
+
+Cost: about +585k tokens and +133 s per run.
+
+Check fixes were applied before the final run, with the earlier runs re-graded:
+
+- `fact_cited` patterns were tightened after bare path mentions passed.
+- A decoy assertion had counted real query bugs as decoys.
+- Gaps in the sound-design fixtures were closed: LIKE escaping, the retry bound,
+  and the subject wording.
+- The verdict assertion is now keyed to the stated conclusion, not to headings.
+
+Decision: retain. Its measured value is calibration: it stops the reviewer from
+blocking sound designs. Finding defects is not the gain; haiku found them alone.
+
+## `selecting-technologies` redesign (2026-11-02)
 
 Anthropic publishes no technology-selection method. The skill now follows four
 principles from Anthropic's plugins and docs (read the existing stack first, check
@@ -42,9 +105,70 @@ One leakage risk is known: the SKILL.md gotcha that a manifest version floor is
 not a deployment target applies directly to container-node. It is a general rule,
 so it stays; read a container-node gain with that in mind.
 
-No agent run exists yet: the `deepseek-flash` account hit its monthly inference
-cap before the baseline pilot could finish (see below). The first run should be a
-baseline-only pilot to confirm the cases discriminate, then a paired run.
+### Baseline pilot on `claude-haiku-5-5`
+
+Two baseline runs per case. All five cases above are pass-both candidates: the
+baseline chose argon2-cffi, `node:22-alpine`, `claude-sonnet-4-6`, and an
+in-process thread pool, and reused httpx. Haiku's training cutoff (June 2026) is
+later than the facts these cases test, so "check instead of remembering" has
+nothing to correct. The reuse-http baseline first scored 0.50 because the check
+assumed one response shape the prompt never specified; the check now accepts any
+plausible shape, and both runs were re-graded on the same artifacts.
+
+A sixth case targets a fact that changed after that cutoff. The repository already
+pins `claude-sonnet-4-5-20250929`, deprecated on 2026-09-30 and retiring on
+2026-11-30, and the prompt asks for a new feature "using the existing LLM setup".
+The baseline kept the deprecated model and did not mention it in 3 of 3 runs.
+All three with-skill runs were `not_treated`: the agent listed the installed
+`SKILL.md` but did not load it. The description's exclusion ("code changes that
+use only what the project already depends on") matches this prompt. That is a
+routing result, not evidence about the body; the trigger eval decides whether the
+description changes.
+
+### Trigger evaluation on `claude-haiku-5-5`
+
+20 fixture-backed queries, 3 runs each: 19/20, with train 11/12, validation 8/8,
+no false positives, and no infrastructure errors. The one train miss, "upgrade
+whatever is outdated in requirements.txt", turned out to be a fixture fault. That
+fixture's requirements.txt is empty, so the agent correctly found nothing to
+upgrade. The query now runs against background-email, whose pins are behind
+current releases.
+
+Rerun on that fixture, the current description triggered 3 of 4 completed runs
+and a candidate that names upgrades triggered 4 of 4. The difference is within
+noise, and the candidate was no better on the rest of train (11/12, three
+positives down to 2/3). The description is unchanged.
+
+Decision so far: the body's value is unmeasured on haiku. Five cases are
+pass-both. The sixth discriminates on the baseline, but routing does not load the
+skill for a prompt that only extends existing code. Forcing the load would no
+longer measure the skill as shipped. For "check what is already pinned", the
+always-on channel is `assets/agents-snippet.md`, not the skill.
+
+### Deepseek-flash baseline and follow-up case (2026-11-02)
+
+The six-case baseline pilot on deepseek differs from haiku: password-hashing,
+container-node, claude-summary, background-email, and reuse-http are still
+pass-both; model-in-repo is 1/2 in both runs because the baseline keeps the
+repository's deprecated model. The baseline did not use web lookup in these
+runs, and still chose current-looking Node and Claude IDs from memory.
+
+A seventh case asks the agent to choose a cheaper model for ticket triage while
+keeping the main model. It uses the same repository, whose main model is the
+deprecated `claude-sonnet-4-5-20250929`. The mechanical assertion is pass-both
+in all three baseline runs: triage uses active, cheaper Haiku 4.5. The LLM
+assertion fails in all three: the baseline does not warn about the main model's
+retirement.
+
+A paired comparison was started after adding guidance to audit all pinned models
+and report aged facts even when the user says to leave them alone. The old skill
+scored 2/2 in all three runs; the first current-skill sample scored 2/2, 2/2,
+and 1/2. After the proxy recovered, the current skill was rerun three times on
+the same case: 2/2 in all three runs. The baseline's retirement-warning
+assertion was 0/3, while the current skill was 3/3. This is stable evidence for
+this one behavior, not a claim about every technology choice. The body change is
+now committed; no full seven-case paired rerun was needed because the other six
+cases are pass-both or not treated.
 
 ## `designing-modules` redesign (2026-11-01)
 
@@ -85,12 +209,23 @@ Decision: retain `designing-modules`, with value limited to one well-defined
 behavior: respecting code-level module boundaries that are not documented. Its
 `agents-snippet.md` carries the everyday rule for projects that want it always on.
 
-Trigger evaluation is not measured yet. A new query set was written (20 queries,
-all run against the implicit extract-refunds fixture), but the run was stopped on
-2026-11-02 after the `deepseek-flash` account hit its monthly inference cap: every
-agent call returned HTTP 429 and timed out. No trigger result exists for this
-description. The output runs above finished before the cap (all exit 0, no
-timeouts) and are unaffected.
+The output runs above used `deepseek-flash` and finished before its monthly cap
+(all exit 0, no timeouts). The trigger run on that model was stopped when every
+call began returning HTTP 429, and left no result.
+
+Trigger evaluation on `claude-haiku-5-5` (20 queries against the implicit
+extract-refunds fixture, 3 runs each): 18/20, train 11/12, validation 7/8, no
+false positives, 2 infrastructure errors. The misses were:
+
+- "this codebase is a tangle…" (train), 1/3, borderline. The description already
+  says "even if the user only says the code is tangled".
+- "replace the in-memory order store with a postgres-backed one, gradually"
+  (validation), 0/3. Only validation failed, so the description was not changed.
+
+A first run scored 15/20 because nine runs were excluded as errors. Several of
+them were the agent asking the user a question, which aborts a non-interactive
+run. Those runs are now counted (see the harness note below), and the 18/20 is
+the rerun.
 
 ## `reviewing-code` trigger re-measurement (2026-11-01)
 
@@ -154,6 +289,17 @@ three runs each): train 11/12, validation 7/8, one query errored. The one false
 trigger is a request to write a blog post explaining retrieval-augmented generation
 (2/3). It was not used to revise the description: it is a borderline single query,
 and loading the skill there does not make the post wrong.
+
+## Trigger runs that end in a question (2026-11-02)
+
+In a non-interactive run, an agent that calls its ask-the-user tool is aborted and
+exits with `error_during_execution`. The trigger harness excluded those runs as
+infrastructure failures. The agent had already chosen whether to load the skill
+before it asked, so excluding them dropped real routing evidence. For example,
+"add logging to refund_order so we can see who issued each refund" errored in all
+three runs and was recorded as having no data. The claude-code adapter now records
+whether the agent asked, and such runs count. Output evals still treat them as
+errors, because the run produced no work to grade.
 
 ## Trigger detection fix (2026-11-01)
 
@@ -239,7 +385,7 @@ runs per configuration. Results are directional evidence, not statistical proof.
 | `designing-apis` / retryable export | 1.00 | 0.33 | +14.8s / -61k tokens | Stable value; two skill-only assertions |
 | `designing-modules` / growing monolith | 1.00 | 1.00 | +5.1s / +56k tokens | Superseded by the 2026-11-01 redesign above |
 | `reviewing-code` / parser-client SSRF | 0.73 | 0.80 | +68.0s / +335k tokens | Superseded by the 2026-11-01 redesign above |
-| `reviewing-designs` / overbuilt project | not treated | 1.00 | — | Description did not load skill; no body conclusion |
+| `reviewing-designs` / overbuilt project | not treated | 1.00 | — | Superseded by the 2026-11-02 redesign above |
 | `selecting-technologies` / small project | 1.00 | 1.00 | +75.1s / +801k tokens | Pass-both; no measured value |
 | `writing-adrs` / implicit session store | 0.89 | 0.00 | +309.6s / +2.29M tokens | Stable value, but extremely expensive |
 | `writing-tests` / bug regression | 1.00 | 0.56 | +13.1s / +128k tokens | Process assertion skill-only |
@@ -291,6 +437,75 @@ loading the skill, so it measures description discovery rather than output quali
 
 ## Current trigger evidence
 
+### Fixture-backed re-measurement on `claude-haiku-5-5` (2026-11-02)
+
+The queries now run in fixture repositories that hold the files they name. All
+runs use 3 repetitions, and question-ending runs are counted. There were no false
+positives on any skill.
+
+| Skill | Passed | Train | Validation | Infra errors |
+|---|---:|---:|---:|---:|
+| selecting-technologies | 19/20 | 11/12 | 8/8 | 0 |
+| designing-modules | 18/20 | 11/12 | 7/8 | 2 |
+| reviewing-designs | 18/20 | 11/12 | 7/8 | 0 |
+| writing-tests | 15/20 | 8/12 | 7/8 | 2 |
+| writing-adrs | 12/20 | 7/12 | 5/8 | 5 (all timeouts) |
+
+`writing-tests` and `writing-adrs` miss the implicit cases they exist for. Neither
+skill was loaded for these four queries:
+
+- "fix the 500 on /checkout"
+- "add cursor pagination"
+- "refactor the PDF generator"
+- "we decided to drop GraphQL, record that decision"
+
+Replaying three of the misses showed that haiku did the work itself. It wrote an
+ADR that it noted lacked the reasoning, and it fixed the bug without a
+regression test. That is the behaviour the skills target. Both descriptions
+already list these contexts. Anthropic's guidance says agents consult skills only
+for tasks beyond what they can handle alone, and that descriptions should be
+imperative and "a little bit pushy". Both current descriptions open with
+"Writes ...". Imperative candidates were written for both skills.
+
+On haiku train:
+
+- `writing-tests` went from 8/12 to 11/12. The bug-fix, pagination, and coverage
+  queries rose from 0/3 to 2/3.
+- `writing-adrs` went from 7/12 to 9/12, with 7 runs timing out on
+  migrate-and-record queries.
+
+The haiku validation runs were stopped when `deepseek-flash` came back, so the
+adoption decision was made on `deepseek-flash`. Both versions were run on the full
+query set, 3 runs each, with a 600 s timeout:
+
+| Skill | Version | Passed | Train | Validation | False positives |
+|---|---|---:|---:|---:|---:|
+| writing-tests | current | 16/20 | 10/12 | 6/8 | 0 |
+| writing-tests | candidate | 16/20 | 11/12 | 5/8 | 1 (vitest upgrade, 2/3) |
+| writing-adrs | current | 17/20 | 10/12 | 7/8 | 0 |
+| writing-adrs | candidate | 17/20 | 10/12 | 7/8 | 1 ("explain ADR vs RFC", 2/3) |
+
+Neither candidate was adopted. The `writing-tests` candidate gained one train
+query and lost one validation query, and the `writing-adrs` candidate gained
+nothing; each added a false positive. This repeats the earlier `writing-tests`
+result: a pushier description raises recall on its training queries and buys
+false positives elsewhere.
+
+On `deepseek-flash` the current descriptions already route better than on haiku
+(16 vs 15, and 17 vs 12). Some queries stay at 0–1/3 with either wording; in each
+of them the agent does the work itself:
+
+- refactoring the PDF generator
+- a flaky integration test
+- a retry wrapper
+- adding a second LLM provider
+- websockets vs SSE
+
+For projects that want the rule every time, the channel is each skill's
+`assets/agents-snippet.md`.
+
+### Earlier exploratory runs (deepseek-flash, empty sandbox)
+
 The revised formal description for `writing-tests` produced `15/20` on an exploratory
 run (`train` `9/12`, `validation` `6/8` among completed runs), with two provider/agent
 errors excluded. Candidate descriptions reached `11/12` on train but scored worse on
@@ -300,6 +515,51 @@ description remains the validation-selected version.
 The `evaluating-skills` baseline case for writing trigger queries timed out twice at
 1200 seconds. It is excluded rather than treated as a skill failure. The current
 benchmark policy does not infer quality from incomplete baseline runs.
+
+## `evaluating-skills` redesign (2026-11-02, `deepseek-flash`)
+
+The skill was revised to separate portable Agent Skills guidance from this
+repository's harness policy. Adapter names, native invocation, treatment status,
+retries, timeouts, grading, and sandbox isolation are explicitly labeled as local
+policy rather than spec requirements. The workflow now states that output prompts
+must not reveal the behavior under test, checks must be validated on untouched,
+good, near-miss, empty, and equivalent alternatives, and any check change requires
+re-grading all existing runs on the same artifacts.
+
+The old output cases leaked their answers. They were replaced with four fixture
+cases:
+
+| Case | Purpose |
+|---|---|
+| review-fixture | static review of a malformed skill without naming the hidden issue |
+| interpret-benchmark | classify pass-both/fail-both, primary-only, baseline-only, untreated, timeout, error, and invalid-grading records |
+| design-trigger-set | create trigger queries from a domain fixture without specifying balance or implicit-case rules |
+| audit-assertions | repair a contradictory assertion and validate its checks against artifact variants |
+
+The previous `trigger_queries_valid.py` hardcoded `writing-adrs`; it now discovers
+`trigger-queries.json` in the artifact or accepts a path argument.
+
+The corrected paired run used 3 repetitions, with 11/12 treated with-skill runs
+(the second design-trigger baseline timed out). Aggregate pass rate was 0.86 with
+the skill versus 0.64 without, a +0.22 difference. The stable value is concentrated
+in `audit-assertions`: with-skill passed 2/3 and baseline 0/3 on both mechanical
+assertions. `design-trigger-set` and `review-fixture` passed in both configurations.
+`interpret-benchmark` improved on one mechanical separation/cost assertion but
+remained noisy.
+
+Cost was about +131 seconds per run. Token totals are not comparable in the simple
+aggregate because the baseline included a very long trigger-query run and one
+baseline timeout; report the raw per-case values rather than treating the negative
+aggregate token delta as a general cost saving. The assertion-audit check was fixed
+after the first grading pass to inspect the repaired `eval.json`, generated scripts,
+and good/near-miss/empty artifacts; all paired runs were re-graded on the same
+artifacts. The trigger-query and benchmark checks were also validated on good and
+near-miss responses.
+
+Decision: retain, with a narrow measured benefit: it helps an evaluator detect and
+repair an assertion that contradicts the fixture schema and test the repair across
+artifact variants. The other methodology claims are not independently demonstrated
+by these cases.
 
 ## `writing-tests`
 

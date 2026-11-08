@@ -137,18 +137,22 @@ e519d0dd4d16be63b956fd35ab52fd6644840328
 
 - 已按官方规范和最佳实践完成内容审查，并修正无条件规则、评测断言、review fixture 和测试 references。
 - 已提交 treatment-aware harness：`ef6c8c5`。它区分 routing、treated body effect、baseline 和 infrastructure failure。
-- treatment-aware 结果显示：`designing-apis`、`writing-adrs`、`writing-tests`、`authoring-skills`、`reviewing-code`、`building-llm-applications`、`designing-modules` 在关键 case 上有增益；`selecting-technologies` 旧 case 为 pass-both，已重写并换成新 fixture case，尚未评测；`reviewing-designs` 未 treated。
-- `designing-modules` 改用非 Anthropic 一手资料（Anthropic 没有模块边界方面的指导；来源见其 `references/sources.md`）。增益只集中在一个行为：边界只体现在代码约定、未写成文档时，通过公开 API 访问而不是越界 import internal（baseline 6 次中 5 次越界，with-skill 6/6 正确）。边界写进契约文件时两边都能做对。新 trigger 查询集已写好，但尚未测出结果（见下方额度说明）。
-- 2026-11-02 起 `deepseek-flash` 账户触发月度推理上限（HTTP 429，`monthly Clinepass limit`，约 2026-11-17 重置）。此后启动的运行全部超时，不产生证据；上限前完成的运行有效。恢复前不要启动评测，也不要把超时当成 skill 结论。
-- trigger eval 现在支持 `fixture`：需要输入才能工作的 skill（审查代码、审查设计、写 ADR）必须在有真实输入的 sandbox 里测路由。`reviewing-code` 加 fixture 后为 20/20；空仓库下的 12/20 和更早的 16/20 都是环境造成的。
-- `reviewing-code` 已按 Anthropic / Claude Code 官方审查设计重写（来源和 SHA 见 `skills/reviewing-code/references/sources.md`），eval 改为“真缺陷 + 官方 false-positive 诱饵”的配对 case 和机械检查；两轮独立复测均为约 0.85 vs 0.65。之前的“无增益”结论来自评测风格偏好的坏断言，已作废。
-- `building-llm-applications` 已按 Anthropic 官方材料重写（building effective agents、writing tools、contextual retrieval、evals、injection 等，见其 `references/sources.md`）；eval 改为只提需求的 fixture case，由脚本运行产出的代码判定。两轮复测 1.00 vs 0.78 / 0.75，成本基本持平。旧的 4 个 case 在 prompt 里直接写了答案，已删除。
-- 这些结论仍是每个 case 三次运行的方向性证据，不能泛化为 skill 的全部能力；详细结果和成本见 `docs/EVALUATION_RESULTS.md`。
-- 不再根据旧的、未区分 treatment 的 benchmark 删除 skill；先换成真正能区分 baseline 的 case，再做移除决定。
+- treatment-aware 结果显示：`designing-apis`、`writing-adrs`、`writing-tests`、`authoring-skills`、`reviewing-code`、`building-llm-applications`、`designing-modules`、`reviewing-designs` 在关键 case 上有增益；`selecting-technologies` 正文增益尚未测出（见下）。
+- 评测模型：`deepseek-flash`。2026-11-02 它一度触发月度上限，当天临时用 `claude-haiku-5-5` 跑了一批；之后 deepseek 已通过 sandbox probe 恢复，后续正式评测继续使用 deepseek。两个模型的结果不可直接比较；`docs/EVALUATION_RESULTS.md` 每节注明模型。正式批次前先跑 sandbox probe。
+- sandbox 包装脚本 `~/.cache/riff-skills/bin/cometix-sandboxed` 在登录用户变更后丢失过一次，已重建：只允许在 `~/.cache/riff-skills/runs/*/work` 和 grader 用的 `/tmp/riff-complete-*/work` 下运行。缺失时先重建再跑评测，不要裸跑 cometix。
+- `designing-modules` 改用非 Anthropic 一手资料（Anthropic 没有模块边界方面的指导；来源见其 `references/sources.md`）。增益只集中在一个行为：边界只体现在代码约定、未写成文档时，通过公开 API 访问而不是越界 import internal（deepseek 上 baseline 6 次中 5 次越界，with-skill 6/6 正确）。haiku 上 trigger 18/20，0 误触发。
+- `reviewing-designs` 按 Anthropic 审查设计重写，换成 4 个 fixture case（prompt 不点题）。haiku 上 0.98 vs 0.83：两边都能找出隐藏缺陷，差别在“健全设计给 approve”（with-skill 5/6，baseline 0/6）。成本约 +585k token/次。trigger 18/20。
+- `selecting-technologies` 在 deepseek 上新增第 7 个 case：选择更便宜的 triage 模型时，baseline 3/3 都没有报告仓库固定主模型的退役状态；当前 skill 3/3 报告，机械检查两边均通过。正文改动已提交。haiku 的 19/20 trigger 和旧 case 结果只作为不可比较的辅助证据。
+- trigger harness：agent 调用提问工具后在非交互模式下会被中止，这类运行现在计入路由结果，不再当作错误排除。
+- trigger eval 现在支持 `fixture`：需要输入才能工作的 skill（审查代码、审查设计、写 ADR）必须在有真实输入的 sandbox 里测路由。
+- 已按 Anthropic / Claude Code 实践重做 review、LLM application、module、technology-selection、design-review 和 evaluation skill；详细结果和成本见 `docs/EVALUATION_RESULTS.md`。
+- 这些结论是每个 case 三次运行的方向性证据，不能泛化为 skill 的全部能力。
+- 用户已决定在 2026-11-02 收尾评测阶段，不再为统一模型而重跑现有结果；Haiku 结果与 deepseek 结果保持分开记录。
+- 仓库当前包含 10 个可发布 skill；`template/SKILL.template.md` 是内部模板，不会被通用 skills CLI 安装。
 
 ## 下一步顺序
 
-1. 每次改动后运行：
+1. 发布或分发前运行校验：
 
    ```bash
    python3 scripts/validate.py --strict
@@ -165,7 +169,8 @@ e519d0dd4d16be63b956fd35ab52fd6644840328
 4. 保持 README 的通用 CLI 安装、检查、更新和 lockfile 说明与 CLI 实际行为一致；CLI 升级时重新核对命令。
 5. 发布使用 `vMAJOR.MINOR.PATCH` Git tag；发布前检查所有 skill 都能从 Git 仓库安装，Claude marketplace 只作为附加入口维护。
 6. 项目依赖若生成 `skills-lock.json`，提交并审查它；不要提交 `.agents/skills/`、agent session、缓存或其他安装生成物。
-7. 暂不继续运行行为评测；若以后恢复评测政策，单独更新本文件和 `docs/EVALUATION_RESULTS.md`。
+7. 如果安装到个人项目且规则需要每次生效，复制对应 `assets/agents-snippet.md` 到项目自己的 agent instruction file；skill 只在加载时生效。
+8. 暂不继续运行行为评测；如果以后恢复，单独更新本文件和 `docs/EVALUATION_RESULTS.md`，并且不做 Pi、Codex、Nyan 或跨 agent/model 对比，除非用户明确改变评测政策。
 
 ## 不要做的事
 

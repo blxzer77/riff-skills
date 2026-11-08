@@ -56,7 +56,7 @@
   {
     "query": "upgrade whatever is outdated in requirements.txt and tell me what you picked",
     "should_trigger": true,
-    "fixture": "evals/files/password-hashing",
+    "fixture": "evals/files/background-email",
     "set": "train"
   },
   {

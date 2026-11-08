@@ -1,0 +1,6 @@
+<h1>Stock</h1>
+<table>
+  {% for item in items %}
+  <tr><td>{{ item.name }}</td><td>{{ item.category }}</td><td>{{ item.quantity }}</td></tr>
+  {% endfor %}
+</table>

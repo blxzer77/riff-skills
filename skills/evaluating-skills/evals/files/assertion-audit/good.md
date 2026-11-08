@@ -1,0 +1,1 @@
+# Audit\n\n## Findings\n- Missing timeout check\n- Wrong fixture root\n- No empty-output case\n\n## Repair\nUse the schema's output field and test good, near-miss, and empty artifacts.

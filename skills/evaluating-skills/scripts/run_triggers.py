@@ -47,7 +47,9 @@ def run_query(query: str, skill_dir: Path, name: str, adapter, model, timeout, r
     loaded = result.invoked_skill if adapter.native_invocation else result.read_skill
     triggered = name in loaded
     # A run that errored before the agent decided anything is no evidence either way.
-    failed = not triggered and not proc.stopped_early and (
+    # A run that ended because the agent asked the user a question did decide: it
+    # chose to ask without loading the skill, so it counts as a run, not an error.
+    failed = not triggered and not proc.stopped_early and not result.asked_user and (
         proc.timed_out or proc.exit_code != 0 or result.error is not None)
     return triggered, failed, proc, result.error
 
